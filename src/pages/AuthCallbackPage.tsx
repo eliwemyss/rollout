@@ -10,41 +10,51 @@ export const AuthCallbackPage = () => {
 
   useEffect(() => {
     if (handled.current) return;
-    handled.current = true;
 
-    const handleCallback = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (handled.current) return;
 
-      if (error || !session) {
-        navigate('/login', { replace: true });
-        return;
+      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
+        handled.current = true;
+        subscription.unsubscribe();
+
+        const user = session.user;
+
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (!existingProfile) {
+          await supabase.from('profiles').insert({
+            id: user.id,
+            email: user.email ?? '',
+            full_name:
+              user.user_metadata?.full_name ||
+              user.user_metadata?.name ||
+              user.email?.split('@')[0] ||
+              'User',
+            avatar_url: user.user_metadata?.avatar_url ?? null,
+          });
+        }
+
+        navigate('/', { replace: true });
       }
+    });
 
-      const user = session.user;
-
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      if (!existingProfile) {
-        await supabase.from('profiles').insert({
-          id: user.id,
-          email: user.email ?? '',
-          full_name:
-            user.user_metadata?.full_name ||
-            user.user_metadata?.name ||
-            user.email?.split('@')[0] ||
-            'User',
-          avatar_url: user.user_metadata?.avatar_url ?? null,
-        });
+    const timeout = setTimeout(() => {
+      if (!handled.current) {
+        handled.current = true;
+        subscription.unsubscribe();
+        navigate('/login?error=auth_failed', { replace: true });
       }
+    }, 10000);
 
-      navigate('/', { replace: true });
+    return () => {
+      clearTimeout(timeout);
+      subscription.unsubscribe();
     };
-
-    handleCallback();
   }, [navigate]);
 
   return (
