@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Edit2, Trash2, X, ChevronLeft } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabaseClient';
@@ -145,33 +145,34 @@ export const RideDetailPage = () => {
   };
 
   const creatorName = ride?.creator?.full_name ?? 'the ride leader';
-  const showTipButton =
-    user && !isCreator && hasJoined && ride?.creator_id;
+  const showTipButton = !isCreator && ride?.creator_id;
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-      <button
-        onClick={() => navigate('/')}
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '4px',
-          background: 'transparent',
-          border: 'none',
-          cursor: 'pointer',
-          color: COLORS.textSecondary,
-          fontFamily: 'DM Sans, sans-serif',
-          fontSize: '14px',
-          padding: '0',
-          marginBottom: '20px',
-          transition: 'color 0.2s ease',
-        }}
-        onMouseEnter={(e) => (e.currentTarget.style.color = COLORS.textPrimary)}
-        onMouseLeave={(e) => (e.currentTarget.style.color = COLORS.textSecondary)}
-      >
-        <ChevronLeft size={16} />
-        Back to Dashboard
-      </button>
+      {user && (
+        <button
+          onClick={() => navigate('/')}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '4px',
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            color: COLORS.textSecondary,
+            fontFamily: 'DM Sans, sans-serif',
+            fontSize: '14px',
+            padding: '0',
+            marginBottom: '20px',
+            transition: 'color 0.2s ease',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = COLORS.textPrimary)}
+          onMouseLeave={(e) => (e.currentTarget.style.color = COLORS.textSecondary)}
+        >
+          <ChevronLeft size={16} />
+          Back to Dashboard
+        </button>
+      )}
 
       {joinToast && (
         <div
@@ -338,37 +339,102 @@ export const RideDetailPage = () => {
               Join Ride
             </Button>
           )}
+          {!user && (
+            <p
+              style={{
+                marginTop: '16px',
+                textAlign: 'center',
+                fontFamily: 'DM Sans, sans-serif',
+                fontSize: '13px',
+                color: COLORS.textMuted,
+              }}
+            >
+              Want to see all upcoming rides?{' '}
+              <Link
+                to="/login"
+                style={{
+                  color: COLORS.textSecondary,
+                  textDecoration: 'none',
+                  borderBottom: `1px solid ${COLORS.borderLight}`,
+                  transition: 'color 0.2s ease',
+                }}
+              >
+                Create a free account →
+              </Link>
+            </p>
+          )}
         </div>
       )}
 
       {!isCreator && hasJoined && (
-        <div
-          style={{
-            ...joinSectionStyles,
-            backgroundColor: COLORS.accentGlow,
-            borderColor: COLORS.accent,
-          }}
-        >
-          <p
+        <>
+          <div
             style={{
-              fontSize: '15px',
-              fontFamily: 'DM Sans, sans-serif',
-              color: COLORS.textPrimary,
-              textAlign: 'center',
+              ...joinSectionStyles,
+              backgroundColor: COLORS.accentGlow,
+              borderColor: COLORS.accent,
             }}
           >
-            You're in! See you on the ride.
-          </p>
-          {showTipButton && (
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <TipLeaderButton
-                rideId={ride!.id}
-                creatorId={ride!.creator_id}
-                creatorName={creatorName}
-              />
+            <p
+              style={{
+                fontSize: '15px',
+                fontFamily: 'DM Sans, sans-serif',
+                color: COLORS.textPrimary,
+                textAlign: 'center',
+              }}
+            >
+              You're in! See you on the ride.
+            </p>
+          </div>
+          {!user && (
+            <div
+              style={{
+                backgroundColor: COLORS.card,
+                border: `1px solid ${COLORS.border}`,
+                borderRadius: '16px',
+                padding: '20px 24px',
+                marginBottom: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '16px',
+                flexWrap: 'wrap',
+              }}
+            >
+              <p
+                style={{
+                  fontFamily: 'DM Sans, sans-serif',
+                  fontSize: '14px',
+                  color: COLORS.textSecondary,
+                  margin: 0,
+                  flex: 1,
+                }}
+              >
+                Save your spot and see upcoming rides — create a free account
+              </p>
+              <Link
+                to="/login"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  padding: '8px 16px',
+                  borderRadius: '10px',
+                  border: `1px solid ${COLORS.borderLight}`,
+                  background: 'transparent',
+                  color: COLORS.textPrimary,
+                  fontFamily: 'JetBrains Mono, monospace',
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  textDecoration: 'none',
+                  whiteSpace: 'nowrap',
+                  transition: 'border-color 0.2s ease',
+                }}
+              >
+                Sign Up
+              </Link>
             </div>
           )}
-        </div>
+        </>
       )}
 
       <ParticipantList
@@ -377,6 +443,12 @@ export const RideDetailPage = () => {
         creatorId={ride.creator_id}
         onRemoveParticipant={handleRemoveParticipant}
       />
+
+      {showTipButton && (
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px' }}>
+          <TipLeaderButton creatorName={creatorName} />
+        </div>
+      )}
 
       {showDeleteConfirm && (
         <ConfirmDialog

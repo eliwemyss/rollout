@@ -39,7 +39,7 @@ export const AuthCallbackPage = () => {
           });
         }
 
-        navigate('/', { replace: true });
+        window.location.href = '/';
       }
     });
 
