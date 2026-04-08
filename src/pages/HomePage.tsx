@@ -91,12 +91,22 @@ export const HomePage = () => {
         setSeriesList(seriesWithRides);
       }
 
-      // 2. Fetch user's rides (non-series, personal rides)
+      // 2. Fetch user's rides (non-series, only created or joined)
       if (user) {
+        // Get ride IDs the user has joined
+        const { data: participantRows } = await supabase
+          .from('participants')
+          .select('ride_id')
+          .eq('user_id', user.id);
+
+        const joinedRideIds = (participantRows || []).map((p) => p.ride_id);
+
+        // Fetch rides created by user OR joined by user, excluding series rides
         const { data, error } = await supabase
           .from('rides')
           .select('*, creator:profiles!creator_id(*)')
           .is('series_id', null)
+          .or(`creator_id.eq.${user.id}${joinedRideIds.length > 0 ? `,id.in.(${joinedRideIds.join(',')})` : ''}`)
           .order('start_datetime', { ascending: true });
 
         if (!error && data) {

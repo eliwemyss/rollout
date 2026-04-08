@@ -5,13 +5,13 @@ export interface RideTag {
 }
 
 export const RIDE_TAGS: RideTag[] = [
-  { id: 'social', label: 'Social', color: '#00ff87' },
+  { id: 'road', label: 'Road', color: '#00ff87' },
+  { id: 'gravel', label: 'Gravel', color: '#c084fc' },
+  { id: 'mtb', label: 'MTB', color: '#ff6b35' },
   { id: 'cafe', label: 'Cafe Ride', color: '#ffb800' },
   { id: 'no-drop', label: 'No Drop', color: '#00b4ff' },
   { id: 'drop', label: 'Drop Ride', color: '#ff4444' },
-  { id: 'gravel', label: 'Gravel', color: '#c084fc' },
-  { id: 'training', label: 'Training', color: '#ff6b35' },
-  { id: 'mtb', label: 'MTB', color: '#8b6914' },
+  { id: 'beginner', label: 'Beginner Friendly', color: '#34d399' },
 ];
 
 export const getTagById = (id: string): RideTag | undefined =>
