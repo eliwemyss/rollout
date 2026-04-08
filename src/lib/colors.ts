@@ -1,0 +1,15 @@
+export const COLORS = {
+  dark: '#0a0a0a',
+  card: '#111111',
+  border: '#1e1e1e',
+  borderLight: '#2a2a2a',
+  accent: '#00ff87',
+  accentGlow: 'rgba(0, 255, 135, 0.08)',
+  danger: '#ff4444',
+  dangerGlow: 'rgba(255, 68, 68, 0.08)',
+  warning: '#ffb800',
+  textPrimary: '#ffffff',
+  textSecondary: '#a0a0a0',
+  textMuted: '#666666',
+  black: '#000000',
+};
