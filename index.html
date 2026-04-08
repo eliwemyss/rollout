@@ -10,7 +10,12 @@
     <title>Rollout</title>
   </head>
   <body>
+    <h1 style="color: red; padding: 20px;">HTML IS LOADING</h1>
     <div id="root"></div>
+    <script>
+      console.log('[v0] INLINE SCRIPT RUNNING');
+      document.body.style.backgroundColor = '#222';
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
