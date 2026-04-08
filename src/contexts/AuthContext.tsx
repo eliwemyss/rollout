@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { User, AuthError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
 import { Profile } from '../types';
+import { getGuestJoins, clearGuestJoins } from '../utils/guestStorage';
 
 interface AuthContextType {
   user: User | null;
@@ -43,6 +44,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
+  /** Claim any guest participant records stored in localStorage */
+  const claimGuestParticipants = async (userId: string) => {
+    const guestJoins = getGuestJoins();
+    if (guestJoins.length === 0) return;
+
+    // Update each guest participant row to link it to the new user
+    const claims = guestJoins.map((join) =>
+      supabase
+        .from('participants')
+        .update({ user_id: userId, guest_name: null })
+        .eq('id', join.participantId)
+        .is('user_id', null)
+    );
+
+    await Promise.allSettled(claims);
+    clearGuestJoins();
+  };
+
   const loadProfile = async (userId: string) => {
     const { data, error } = await supabase
       .from('profiles')
@@ -52,6 +71,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     if (!error && data) {
       setProfile(data);
+      // Existing profile — still check for guest claims (e.g. sign-in after guest join)
+      await claimGuestParticipants(userId);
     } else if (!data) {
       // Profile doesn't exist yet — create it from auth user metadata
       const { data: { user: authUser } } = await supabase.auth.getUser();
@@ -75,6 +96,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setProfile(created);
         }
       }
+      // New profile — claim guest participants
+      await claimGuestParticipants(userId);
     }
     setLoading(false);
   };

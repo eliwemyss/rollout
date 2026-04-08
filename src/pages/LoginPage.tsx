@@ -6,6 +6,7 @@ import { LoginForm } from '../components/auth/LoginForm';
 import { SignUpForm } from '../components/auth/SignUpForm';
 import { GoogleAuthButton } from '../components/auth/GoogleAuthButton';
 import { ErrorMessage } from '../components/common/ErrorMessage';
+import { popGuestRedirect } from '../utils/guestStorage';
 
 export const LoginPage = () => {
   const { user } = useAuth();
@@ -14,7 +15,8 @@ export const LoginPage = () => {
   const authError = searchParams.get('error');
 
   if (user) {
-    return <Navigate to="/" replace />;
+    const guestRedirect = popGuestRedirect();
+    return <Navigate to={guestRedirect ? `/ride/${guestRedirect}` : '/'} replace />;
   }
 
   const containerStyles: React.CSSProperties = {

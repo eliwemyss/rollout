@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { COLORS } from '../lib/colors';
+import { popGuestRedirect } from '../utils/guestStorage';
 
 export const AuthCallbackPage = () => {
   const navigate = useNavigate();
@@ -49,7 +50,8 @@ export const AuthCallbackPage = () => {
               });
             }
 
-            window.location.href = '/';
+            const guestRedirect = popGuestRedirect();
+            window.location.href = guestRedirect ? `/ride/${guestRedirect}` : '/';
             return;
           }
         }
@@ -61,7 +63,8 @@ export const AuthCallbackPage = () => {
           if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
             handled.current = true;
             subscription.unsubscribe();
-            window.location.href = '/';
+            const guestRedirect = popGuestRedirect();
+            window.location.href = guestRedirect ? `/ride/${guestRedirect}` : '/';
           }
         });
 

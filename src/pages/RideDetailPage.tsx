@@ -14,6 +14,7 @@ import { ShareLinkSection } from '../components/rides/ShareLinkSection';
 import { JoinRideForm } from '../components/rides/JoinRideForm';
 import { ParticipantList } from '../components/rides/ParticipantList';
 import { TipLeaderButton } from '../components/rides/TipLeaderButton';
+import { saveGuestJoin, saveGuestRedirect, getGuestJoins } from '../utils/guestStorage';
 
 export const RideDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -55,24 +56,42 @@ export const RideDetailPage = () => {
   }, []);
 
   const isCreator = user && ride && user.id === ride.creator_id;
+  const guestJoinedThisRide = !user && id
+    ? getGuestJoins().some((j) => j.rideId === id)
+    : false;
   const hasJoined = participants.some(
     (p) => p.user_id === user?.id || (user && p.guest_name === profile?.full_name)
-  );
+  ) || guestJoinedThisRide;
+  const myParticipant = participants.find((p) => p.user_id === user?.id);
 
   const handleJoin = async (guestName?: string) => {
     if (!id) return;
 
-    const { error } = await supabase.from('participants').insert({
-      ride_id: id,
-      user_id: user?.id || null,
-      guest_name: guestName || null,
-    });
+    const { data: insertedRow, error } = await supabase
+      .from('participants')
+      .insert({
+        ride_id: id,
+        user_id: user?.id || null,
+        guest_name: guestName || null,
+      })
+      .select('id')
+      .single();
 
     if (error) {
       if (error.message.includes('duplicate') || error.code === '23505') {
         throw new Error('You have already joined this ride');
       }
       throw new Error(error.message);
+    }
+
+    // If this was a guest join, cache info in localStorage for account linking
+    if (!user && guestName && insertedRow) {
+      saveGuestJoin({
+        participantId: insertedRow.id,
+        rideId: id,
+        guestName: guestName,
+        joinedAt: new Date().toISOString(),
+      });
     }
 
     setShowJoinForm(false);
@@ -316,9 +335,11 @@ export const RideDetailPage = () => {
 
       <RideDetails ride={ride} />
 
-      {!isCreator && !hasJoined && (
+      {!hasJoined && (
         <div style={joinSectionStyles}>
-          <h3 style={sectionTitleStyles}>Join This Ride</h3>
+          <h3 style={sectionTitleStyles}>
+            {isCreator ? 'Rejoin Your Ride' : 'Join This Ride'}
+          </h3>
           {showJoinForm ? (
             <JoinRideForm
               onJoin={handleJoin}
@@ -336,7 +357,7 @@ export const RideDetailPage = () => {
               }}
               fullWidth
             >
-              Join Ride
+              {isCreator ? 'Rejoin Ride' : 'Join Ride'}
             </Button>
           )}
           {!user && (
@@ -352,6 +373,7 @@ export const RideDetailPage = () => {
               Want to see all upcoming rides?{' '}
               <Link
                 to="/login"
+                onClick={() => { if (id) saveGuestRedirect(id); }}
                 style={{
                   color: COLORS.textSecondary,
                   textDecoration: 'none',
@@ -366,13 +388,17 @@ export const RideDetailPage = () => {
         </div>
       )}
 
-      {!isCreator && hasJoined && (
+      {hasJoined && (
         <>
           <div
             style={{
               ...joinSectionStyles,
               backgroundColor: COLORS.accentGlow,
               borderColor: COLORS.accent,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '12px',
             }}
           >
             <p
@@ -380,11 +406,20 @@ export const RideDetailPage = () => {
                 fontSize: '15px',
                 fontFamily: 'DM Sans, sans-serif',
                 color: COLORS.textPrimary,
-                textAlign: 'center',
+                margin: 0,
               }}
             >
               You're in! See you on the ride.
             </p>
+            {user && myParticipant && (
+              <Button
+                variant="ghost"
+                onClick={() => handleRemoveParticipant(myParticipant.id)}
+                style={{ whiteSpace: 'nowrap', flexShrink: 0 }}
+              >
+                Leave Ride
+              </Button>
+            )}
           </div>
           {!user && (
             <div
@@ -414,6 +449,7 @@ export const RideDetailPage = () => {
               </p>
               <Link
                 to="/login"
+                onClick={() => { if (id) saveGuestRedirect(id); }}
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
