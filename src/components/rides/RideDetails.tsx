@@ -4,6 +4,7 @@ import { COLORS } from '../../lib/colors';
 import { formatRideDateTime } from '../../utils/dateHelpers';
 import { getRideStatus } from '../../utils/rideStatus';
 import { RideStatusBadge } from './RideStatusBadge';
+import { TagBadge } from './TagBadge';
 
 interface RideDetailsProps {
   ride: RideWithCreator;
@@ -96,7 +97,12 @@ export const RideDetails = ({ ride }: RideDetailsProps) => {
         <div style={creatorStyles}>
           Created by {ride.creator?.full_name || 'Unknown'}
         </div>
-        <RideStatusBadge status={status} />
+        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+          <RideStatusBadge status={status} />
+          {ride.tags && ride.tags.map((tag) => (
+            <TagBadge key={tag} tagId={tag} size="md" />
+          ))}
+        </div>
       </div>
 
       {ride.description && (

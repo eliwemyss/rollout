@@ -19,6 +19,7 @@ export interface RideSeries {
   distance_miles?: number;
   pace?: string;
   route_link?: string;
+  tags?: string[];
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -39,6 +40,7 @@ export interface Ride {
   pace?: string;
   route_link?: string;
   series_id?: string;
+  tags?: string[];
   created_at: string;
   updated_at: string;
 }

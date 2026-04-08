@@ -5,6 +5,7 @@ import { Button } from '../common/Button';
 import { ErrorMessage } from '../common/ErrorMessage';
 import { DateTimePicker } from './DateTimePicker';
 import { Ride } from '../../types';
+import { TagPicker } from './TagPicker';
 
 interface RideFormProps {
   initialData?: Partial<Ride>;
@@ -20,6 +21,7 @@ export interface RideFormData {
   distance_miles: string;
   pace: string;
   route_link: string;
+  tags: string[];
 }
 
 export const RideForm = ({
@@ -37,6 +39,7 @@ export const RideForm = ({
     distance_miles: initialData?.distance_miles?.toString() || '',
     pace: initialData?.pace || '',
     route_link: initialData?.route_link || '',
+    tags: initialData?.tags || [],
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -133,6 +136,10 @@ export const RideForm = ({
         placeholder="Paste a Strava, RideWithGPS, or Google Maps link"
         value={formData.route_link}
         onChange={handleChange}
+      />
+      <TagPicker
+        selected={formData.tags}
+        onChange={(tags) => setFormData({ ...formData, tags })}
       />
       <Button type="submit" fullWidth disabled={loading}>
         {loading ? 'Saving...' : submitLabel}

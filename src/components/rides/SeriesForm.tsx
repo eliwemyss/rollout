@@ -5,6 +5,7 @@ import { Button } from '../common/Button';
 import { ErrorMessage } from '../common/ErrorMessage';
 import { COLORS } from '../../lib/colors';
 import { RideSeries } from '../../types';
+import { TagPicker } from './TagPicker';
 
 interface SeriesFormProps {
   initialData?: Partial<RideSeries>;
@@ -21,6 +22,7 @@ export interface SeriesFormData {
   distance_miles: string;
   pace: string;
   route_link: string;
+  tags: string[];
 }
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -39,6 +41,7 @@ export const SeriesForm = ({
     distance_miles: initialData?.distance_miles?.toString() || '',
     pace: initialData?.pace || '',
     route_link: initialData?.route_link || '',
+    tags: initialData?.tags || [],
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -193,6 +196,10 @@ export const SeriesForm = ({
         placeholder="Paste a Strava, RideWithGPS, or Google Maps link"
         value={formData.route_link}
         onChange={handleChange}
+      />
+      <TagPicker
+        selected={formData.tags}
+        onChange={(tags) => setFormData({ ...formData, tags })}
       />
       <Button type="submit" fullWidth disabled={loading}>
         {loading ? 'Saving...' : submitLabel}

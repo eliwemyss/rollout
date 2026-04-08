@@ -22,6 +22,7 @@ export const NewRidePage = () => {
         distance_miles: formData.distance_miles ? parseFloat(formData.distance_miles) : null,
         pace: formData.pace || null,
         route_link: formData.route_link || null,
+        tags: formData.tags.length > 0 ? formData.tags : [],
       })
       .select()
       .single();

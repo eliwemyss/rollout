@@ -11,6 +11,7 @@ import { RideStatusBadge } from '../components/rides/RideStatusBadge';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { Button } from '../components/common/Button';
 import { ConfirmDialog } from '../components/common/ConfirmDialog';
+import { TagBadge } from '../components/rides/TagBadge';
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -196,6 +197,14 @@ export const SeriesDetailPage = () => {
         >
           {series.title}
         </h1>
+
+        {series.tags && series.tags.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px', marginTop: '8px' }}>
+            {series.tags.map((tag) => (
+              <TagBadge key={tag} tagId={tag} size="md" />
+            ))}
+          </div>
+        )}
 
         {series.creator && (
           <p

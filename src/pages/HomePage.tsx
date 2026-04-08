@@ -12,6 +12,8 @@ import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { Button } from '../components/common/Button';
 import { GoogleAuthButton } from '../components/auth/GoogleAuthButton';
 import { getGuestJoins } from '../utils/guestStorage';
+import { TagBadge } from '../components/rides/TagBadge';
+import { RIDE_TAGS } from '../lib/rideTags';
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -33,6 +35,7 @@ export const HomePage = () => {
   const [rides, setRides] = useState<RideWithCreator[]>([]);
   const [seriesList, setSeriesList] = useState<SeriesWithNextRide[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
   const guestJoins = !user ? getGuestJoins() : [];
   const guestRideIds = guestJoins.map((j) => j.rideId);
@@ -221,6 +224,13 @@ export const HomePage = () => {
         </div>
         <RideStatusBadge status={getRideStatus(ride.start_datetime)} />
       </div>
+      {ride.tags && ride.tags.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '10px' }}>
+          {ride.tags.map((tag) => (
+            <TagBadge key={tag} tagId={tag} />
+          ))}
+        </div>
+      )}
     </Link>
   );
 
@@ -295,6 +305,13 @@ export const HomePage = () => {
               </span>
             )}
           </div>
+          {s.tags && s.tags.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '10px' }}>
+              {s.tags.map((tag) => (
+                <TagBadge key={tag} tagId={tag} />
+              ))}
+            </div>
+          )}
           {s.nextRide && (
             <p
               style={{
@@ -451,6 +468,57 @@ export const HomePage = () => {
         )}
       </div>
 
+      {/* Filter chips */}
+      {seriesList.length > 0 && (
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '8px',
+            marginTop: '24px',
+            marginBottom: '8px',
+          }}
+        >
+          <button
+            onClick={() => setActiveFilter(null)}
+            style={{
+              padding: '6px 14px',
+              borderRadius: '20px',
+              fontSize: '13px',
+              fontWeight: 600,
+              fontFamily: 'DM Sans, sans-serif',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+              color: activeFilter === null ? COLORS.textPrimary : COLORS.textMuted,
+              backgroundColor: activeFilter === null ? COLORS.borderLight : 'transparent',
+              border: `1px solid ${activeFilter === null ? COLORS.borderLight : COLORS.border}`,
+            }}
+          >
+            All
+          </button>
+          {RIDE_TAGS.map((tag) => (
+            <button
+              key={tag.id}
+              onClick={() => setActiveFilter(activeFilter === tag.id ? null : tag.id)}
+              style={{
+                padding: '6px 14px',
+                borderRadius: '20px',
+                fontSize: '13px',
+                fontWeight: 600,
+                fontFamily: 'DM Sans, sans-serif',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+                color: activeFilter === tag.id ? tag.color : COLORS.textMuted,
+                backgroundColor: activeFilter === tag.id ? tag.color + '18' : 'transparent',
+                border: `1px solid ${activeFilter === tag.id ? tag.color + '50' : COLORS.border}`,
+              }}
+            >
+              {tag.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Weekly Rides Section - always visible */}
       {seriesList.length > 0 && (
         <>
@@ -460,7 +528,14 @@ export const HomePage = () => {
               Weekly Rides
             </span>
           </h2>
-          {seriesList.map((s) => renderSeriesCard(s))}
+          {seriesList
+            .filter((s) => !activeFilter || (s.tags && s.tags.includes(activeFilter)))
+            .map((s) => renderSeriesCard(s))}
+          {seriesList.filter((s) => !activeFilter || (s.tags && s.tags.includes(activeFilter))).length === 0 && (
+            <p style={{ fontSize: '14px', color: COLORS.textMuted, fontFamily: 'DM Sans, sans-serif', padding: '20px 0' }}>
+              No weekly rides match this filter.
+            </p>
+          )}
         </>
       )}
 
