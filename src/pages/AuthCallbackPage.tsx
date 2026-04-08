@@ -11,50 +11,75 @@ export const AuthCallbackPage = () => {
   useEffect(() => {
     if (handled.current) return;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (handled.current) return;
+    const handleCallback = async () => {
+      try {
+        // Extract the code from the URL and exchange it for a session
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
 
-      if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
-        handled.current = true;
-        subscription.unsubscribe();
+        if (code) {
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
-        const user = session.user;
+          if (error) {
+            console.error('Code exchange error:', error);
+            navigate('/login?error=auth_failed', { replace: true });
+            return;
+          }
 
-        const { data: existingProfile } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('id', user.id)
-          .maybeSingle();
+          if (data.session) {
+            handled.current = true;
+            const user = data.session.user;
 
-        if (!existingProfile) {
-          await supabase.from('profiles').insert({
-            id: user.id,
-            email: user.email ?? '',
-            full_name:
-              user.user_metadata?.full_name ||
-              user.user_metadata?.name ||
-              user.email?.split('@')[0] ||
-              'User',
-            avatar_url: user.user_metadata?.avatar_url ?? null,
-          });
+            const { data: existingProfile } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('id', user.id)
+              .maybeSingle();
+
+            if (!existingProfile) {
+              await supabase.from('profiles').insert({
+                id: user.id,
+                email: user.email ?? '',
+                full_name:
+                  user.user_metadata?.full_name ||
+                  user.user_metadata?.name ||
+                  user.email?.split('@')[0] ||
+                  'User',
+                avatar_url: user.user_metadata?.avatar_url ?? null,
+              });
+            }
+
+            window.location.href = '/';
+            return;
+          }
         }
 
-        window.location.href = '/';
-      }
-    });
+        // No code in URL — fallback to listening for auth state change
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+          if (handled.current) return;
 
-    const timeout = setTimeout(() => {
-      if (!handled.current) {
-        handled.current = true;
-        subscription.unsubscribe();
+          if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
+            handled.current = true;
+            subscription.unsubscribe();
+            window.location.href = '/';
+          }
+        });
+
+        // Timeout after 10 seconds
+        setTimeout(() => {
+          if (!handled.current) {
+            handled.current = true;
+            subscription.unsubscribe();
+            navigate('/login?error=auth_failed', { replace: true });
+          }
+        }, 10000);
+      } catch (err) {
+        console.error('Auth callback error:', err);
         navigate('/login?error=auth_failed', { replace: true });
       }
-    }, 10000);
-
-    return () => {
-      clearTimeout(timeout);
-      subscription.unsubscribe();
     };
+
+    handleCallback();
   }, [navigate]);
 
   return (
