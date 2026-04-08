@@ -40,7 +40,12 @@ export const TextArea = ({ label, style, ...props }: TextAreaProps) => {
 
   return (
     <div style={containerStyles}>
-      {label && <label style={labelStyles}>{label}</label>}
+      {label && (
+        <label style={labelStyles}>
+          {label}
+          {props.required && <span style={{ color: COLORS.accent, marginLeft: '4px' }}>*</span>}
+        </label>
+      )}
       <textarea style={textareaStyles} {...props} />
     </div>
   );

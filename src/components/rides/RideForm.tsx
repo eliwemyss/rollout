@@ -54,8 +54,12 @@ export const RideForm = ({
     e.preventDefault();
     setError('');
 
-    if (!formData.title || !formData.start_location || !formData.start_datetime) {
-      setError('Please fill in all required fields');
+    const missing: string[] = [];
+    if (!formData.title.trim()) missing.push('Ride Title');
+    if (!formData.start_location.trim()) missing.push('Start Location');
+    if (!formData.start_datetime) missing.push('Date & Time');
+    if (missing.length > 0) {
+      setError(`Please fill in: ${missing.join(', ')}`);
       return;
     }
 
@@ -69,7 +73,7 @@ export const RideForm = ({
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} noValidate>
       {error && <ErrorMessage message={error} />}
       <Input
         type="text"
@@ -123,9 +127,9 @@ export const RideForm = ({
         helperText="Expected riding pace or difficulty"
       />
       <Input
-        type="text"
+        type="url"
         name="route_link"
-        label="Route Link (optional)"
+        label="Route Link"
         placeholder="Paste a Strava, RideWithGPS, or Google Maps link"
         value={formData.route_link}
         onChange={handleChange}

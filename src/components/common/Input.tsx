@@ -46,7 +46,12 @@ export const Input = ({ label, helperText, style, ...props }: InputProps) => {
 
   return (
     <div style={containerStyles}>
-      {label && <label style={labelStyles}>{label}</label>}
+      {label && (
+        <label style={labelStyles}>
+          {label}
+          {props.required && <span style={{ color: COLORS.accent, marginLeft: '4px' }}>*</span>}
+        </label>
+      )}
       <input style={inputStyles} {...props} />
       {helperText && <p style={helperStyles}>{helperText}</p>}
     </div>
