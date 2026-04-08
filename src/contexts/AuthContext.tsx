@@ -20,14 +20,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  console.log('[v0] AuthProvider rendering, loading:', loading);
+
   useEffect(() => {
+    console.log('[v0] AuthProvider useEffect running, calling getSession...');
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('[v0] getSession completed, session:', session ? 'exists' : 'null');
       setUser(session?.user ?? null);
       if (session?.user) {
         loadProfile(session.user.id);
       } else {
         setLoading(false);
       }
+    }).catch((error) => {
+      console.error('[v0] getSession error:', error);
+      setLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
