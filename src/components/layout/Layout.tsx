@@ -63,6 +63,12 @@ export const Layout = ({ children }: LayoutProps) => {
           rollout
         </Link>
         <nav style={navStyles}>
+          <Link
+            to="/about"
+            style={{ ...navButtonStyles, textDecoration: 'none' }}
+          >
+            About
+          </Link>
           {user ? (
             <>
               {isAdmin && (
@@ -85,7 +91,7 @@ export const Layout = ({ children }: LayoutProps) => {
               </button>
             </>
           ) : (
-            <Link to="/login" style={navButtonStyles}>
+            <Link to="/login" style={{ ...navButtonStyles, textDecoration: 'none' }}>
               Sign In
             </Link>
           )}

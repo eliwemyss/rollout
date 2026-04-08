@@ -13,6 +13,7 @@ import { AdminPage } from './pages/AdminPage';
 import { NewSeriesPage } from './pages/NewSeriesPage';
 import { SeriesDetailPage } from './pages/SeriesDetailPage';
 import { EditSeriesPage } from './pages/EditSeriesPage';
+import { AboutPage } from './pages/AboutPage';
 
 function App() {
   return (
@@ -50,6 +51,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route path="/about" element={<AboutPage />} />
             <Route
               path="/admin"
               element={
