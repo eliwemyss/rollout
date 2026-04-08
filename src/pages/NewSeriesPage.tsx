@@ -24,6 +24,7 @@ export const NewSeriesPage = () => {
         pace: formData.pace || null,
         route_link: formData.route_link || null,
         tags: formData.tags.length > 0 ? formData.tags : [],
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       })
       .select()
       .single();
