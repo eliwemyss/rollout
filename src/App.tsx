@@ -1,46 +1,18 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
-import { GlobalStyles } from './components/layout/GlobalStyles';
-import { Layout } from './components/layout/Layout';
-import { ProtectedRoute } from './components/auth/ProtectedRoute';
-import { HomePage } from './pages/HomePage';
-import { LoginPage } from './pages/LoginPage';
-import { NewRidePage } from './pages/NewRidePage';
-import { RideDetailPage } from './pages/RideDetailPage';
-import { EditRidePage } from './pages/EditRidePage';
-import { AuthCallbackPage } from './pages/AuthCallbackPage';
-
 function App() {
+  console.log('[v0] App component rendering');
+  
   return (
-    <AuthProvider>
-      <GlobalStyles />
-      <BrowserRouter>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/auth/callback" element={<AuthCallbackPage />} />
-            <Route
-              path="/ride/new"
-              element={
-                <ProtectedRoute>
-                  <NewRidePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/ride/:id" element={<RideDetailPage />} />
-            <Route
-              path="/ride/:id/edit"
-              element={
-                <ProtectedRoute>
-                  <EditRidePage />
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
-        </Layout>
-      </BrowserRouter>
-    </AuthProvider>
+    <div style={{ 
+      padding: '2rem', 
+      fontFamily: 'system-ui',
+      backgroundColor: '#1a1a1a',
+      color: '#fff',
+      minHeight: '100vh'
+    }}>
+      <h1 style={{ fontSize: '2rem', marginBottom: '1rem' }}>Test Page</h1>
+      <p>If you can see this, React is rendering successfully.</p>
+      <p>Check the browser console for debug messages.</p>
+    </div>
   );
 }
 
