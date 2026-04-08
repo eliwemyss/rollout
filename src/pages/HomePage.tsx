@@ -10,6 +10,7 @@ import { getRideStatus } from '../utils/rideStatus';
 import { RideStatusBadge } from '../components/rides/RideStatusBadge';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { Button } from '../components/common/Button';
+import { GoogleAuthButton } from '../components/auth/GoogleAuthButton';
 import { getGuestJoins } from '../utils/guestStorage';
 
 export const HomePage = () => {
@@ -85,11 +86,29 @@ export const HomePage = () => {
         >
           Organize group rides, share routes, and ride together.
         </p>
-        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-          <Button onClick={() => navigate('/login')}>Sign In</Button>
-          <Button variant="ghost" onClick={() => navigate('/login')}>
-            Create Account
-          </Button>
+        <div style={{ maxWidth: '320px', margin: '0 auto' }}>
+          <GoogleAuthButton />
+          <p
+            style={{
+              marginTop: '16px',
+              fontSize: '13px',
+              fontFamily: 'DM Sans, sans-serif',
+              color: COLORS.textMuted,
+            }}
+          >
+            or{' '}
+            <Link
+              to="/login"
+              style={{
+                color: COLORS.textSecondary,
+                textDecoration: 'none',
+                borderBottom: `1px solid ${COLORS.borderLight}`,
+                transition: 'color 0.2s ease',
+              }}
+            >
+              sign in with email
+            </Link>
+          </p>
         </div>
       </div>
     );
@@ -222,14 +241,27 @@ export const HomePage = () => {
               flex: 1,
             }}
           >
-            Sign in to see all upcoming rides and create your own
+            Sign in to see all rides and create your own
           </p>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <Button onClick={() => navigate('/login')}>Sign In</Button>
-            <Button variant="ghost" onClick={() => navigate('/login')}>
-              Create Account
-            </Button>
-          </div>
+          <Link
+            to="/login"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              padding: '8px 16px',
+              borderRadius: '10px',
+              border: `1px solid ${COLORS.borderLight}`,
+              background: 'transparent',
+              color: COLORS.textPrimary,
+              fontFamily: 'JetBrains Mono, monospace',
+              fontSize: '13px',
+              fontWeight: 700,
+              textDecoration: 'none',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Sign In
+          </Link>
         </div>
       )}
 

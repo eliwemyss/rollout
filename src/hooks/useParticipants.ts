@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { ParticipantWithProfile } from '../types';
 
-export const useParticipants = (rideId: string | undefined) => {
+export const useParticipants = (rideId: string | undefined, userId?: string) => {
   const [participants, setParticipants] = useState<ParticipantWithProfile[]>([]);
 
   const fetchParticipants = useCallback(async () => {
@@ -17,7 +17,7 @@ export const useParticipants = (rideId: string | undefined) => {
     if (!error && data) {
       setParticipants(data as ParticipantWithProfile[]);
     }
-  }, [rideId]);
+  }, [rideId, userId]);
 
   useEffect(() => {
     fetchParticipants();

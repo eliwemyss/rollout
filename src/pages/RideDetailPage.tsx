@@ -22,7 +22,7 @@ export const RideDetailPage = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { ride, loading: rideLoading } = useRide(id);
-  const { participants, refetch: refetchParticipants } = useParticipants(id);
+  const { participants, refetch: refetchParticipants } = useParticipants(id, user?.id);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showJoinForm, setShowJoinForm] = useState(false);
   const [tipBanner, setTipBanner] = useState<'success' | 'cancelled' | null>(null);
