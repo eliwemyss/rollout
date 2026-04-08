@@ -9,6 +9,7 @@ import { NewRidePage } from './pages/NewRidePage';
 import { RideDetailPage } from './pages/RideDetailPage';
 import { EditRidePage } from './pages/EditRidePage';
 import { AuthCallbackPage } from './pages/AuthCallbackPage';
+import { AdminPage } from './pages/AdminPage';
 
 function App() {
   return (
@@ -29,6 +30,14 @@ function App() {
               }
             />
             <Route path="/ride/:id" element={<RideDetailPage />} />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <AdminPage />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/ride/:id/edit"
               element={

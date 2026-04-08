@@ -7,6 +7,7 @@ import { getGuestJoins, clearGuestJoins } from '../utils/guestStorage';
 interface AuthContextType {
   user: User | null;
   profile: Profile | null;
+  isAdmin: boolean;
   loading: boolean;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: AuthError | null }>;
   signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
@@ -146,6 +147,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       value={{
         user,
         profile,
+        isAdmin: profile?.is_admin ?? false,
         loading,
         signUp,
         signIn,

@@ -9,12 +9,12 @@ import { RideForm, RideFormData } from '../components/rides/RideForm';
 
 export const EditRidePage = () => {
   const { id } = useParams<{ id: string }>();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
   const { ride, loading } = useRide(id);
 
   useEffect(() => {
-    if (!loading && ride && user && ride.creator_id !== user.id) {
+    if (!loading && ride && user && ride.creator_id !== user.id && !isAdmin) {
       navigate(`/ride/${id}`);
     }
   }, [ride, user, loading, id, navigate]);

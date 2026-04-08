@@ -18,7 +18,7 @@ import { saveGuestJoin, saveGuestRedirect, getGuestJoins } from '../utils/guestS
 
 export const RideDetailPage = () => {
   const { id } = useParams<{ id: string }>();
-  const { user, profile } = useAuth();
+  const { user, profile, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { ride, loading: rideLoading } = useRide(id);
@@ -56,6 +56,7 @@ export const RideDetailPage = () => {
   }, []);
 
   const isCreator = user && ride && user.id === ride.creator_id;
+  const canManage = isCreator || isAdmin;
   const guestJoinedThisRide = !user && id
     ? getGuestJoins().some((j) => j.rideId === id)
     : false;
@@ -309,7 +310,7 @@ export const RideDetailPage = () => {
           </button>
         </div>
       )}
-      {isCreator && (
+      {canManage && (
         <>
           <div style={actionBarStyles}>
             <Button

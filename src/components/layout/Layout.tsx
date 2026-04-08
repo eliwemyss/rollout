@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Shield } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { COLORS } from '../../lib/colors';
 
@@ -8,7 +9,7 @@ interface LayoutProps {
 }
 
 export const Layout = ({ children }: LayoutProps) => {
-  const { user, signOut } = useAuth();
+  const { user, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
 
   const headerStyles: React.CSSProperties = {
@@ -63,9 +64,26 @@ export const Layout = ({ children }: LayoutProps) => {
         </Link>
         <nav style={navStyles}>
           {user ? (
-            <button style={navButtonStyles} onClick={handleSignOut}>
-              Sign Out
-            </button>
+            <>
+              {isAdmin && (
+                <Link
+                  to="/admin"
+                  style={{
+                    ...navButtonStyles,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    textDecoration: 'none',
+                  }}
+                >
+                  <Shield size={14} />
+                  Admin
+                </Link>
+              )}
+              <button style={navButtonStyles} onClick={handleSignOut}>
+                Sign Out
+              </button>
+            </>
           ) : (
             <Link to="/login" style={navButtonStyles}>
               Sign In
