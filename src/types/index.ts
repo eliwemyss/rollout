@@ -63,6 +63,24 @@ export interface ParticipantWithProfile extends Participant {
 
 export type RideStatus = "upcoming" | "ongoing" | "completed";
 
+export type FeedbackType = "bug" | "feature" | "general";
+export type FeedbackStatus = "new" | "reviewed" | "done" | "dismissed";
+
+export interface Feedback {
+  id: string;
+  user_id?: string;
+  type: FeedbackType;
+  message: string;
+  contact_info?: string;
+  status: FeedbackStatus;
+  admin_notes?: string;
+  created_at: string;
+}
+
+export interface FeedbackWithProfile extends Feedback {
+  profile?: Profile;
+}
+
 export interface Tip {
   id: string;
   ride_id: string;

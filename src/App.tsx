@@ -14,6 +14,7 @@ import { NewSeriesPage } from './pages/NewSeriesPage';
 import { SeriesDetailPage } from './pages/SeriesDetailPage';
 import { EditSeriesPage } from './pages/EditSeriesPage';
 import { AboutPage } from './pages/AboutPage';
+import { FeedbackPage } from './pages/FeedbackPage';
 
 function App() {
   return (
@@ -52,6 +53,7 @@ function App() {
               }
             />
             <Route path="/about" element={<AboutPage />} />
+            <Route path="/feedback" element={<FeedbackPage />} />
             <Route
               path="/admin"
               element={

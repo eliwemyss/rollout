@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, Users, Bike, Trash2, ShieldCheck, ShieldOff } from 'lucide-react';
+import { Shield, Users, Bike, Trash2, ShieldCheck, ShieldOff, MessageCircle, CheckCircle, Eye, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { COLORS } from '../lib/colors';
-import { Profile, RideWithCreator } from '../types';
+import { Profile, RideWithCreator, Feedback } from '../types';
 import { formatShortDate } from '../utils/dateHelpers';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { Button } from '../components/common/Button';
 import { ConfirmDialog } from '../components/common/ConfirmDialog';
 
-type Tab = 'overview' | 'users' | 'rides';
+type Tab = 'overview' | 'users' | 'rides' | 'feedback';
 
 export const AdminPage = () => {
   const { user, isAdmin } = useAuth();
@@ -18,6 +18,7 @@ export const AdminPage = () => {
   const [tab, setTab] = useState<Tab>('overview');
   const [users, setUsers] = useState<Profile[]>([]);
   const [rides, setRides] = useState<RideWithCreator[]>([]);
+  const [feedbackItems, setFeedbackItems] = useState<Feedback[]>([]);
   const [loading, setLoading] = useState(true);
   const [confirmAction, setConfirmAction] = useState<{
     title: string;
@@ -34,16 +35,21 @@ export const AdminPage = () => {
   }, [isAdmin]);
 
   const fetchData = async () => {
-    const [usersRes, ridesRes] = await Promise.all([
+    const [usersRes, ridesRes, feedbackRes] = await Promise.all([
       supabase.from('profiles').select('*').order('created_at', { ascending: false }),
       supabase
         .from('rides')
         .select('*, creator:profiles!creator_id(*)')
         .order('created_at', { ascending: false }),
+      supabase
+        .from('feedback')
+        .select('*')
+        .order('created_at', { ascending: false }),
     ]);
 
     if (usersRes.data) setUsers(usersRes.data as Profile[]);
     if (ridesRes.data) setRides(ridesRes.data as RideWithCreator[]);
+    if (feedbackRes.data) setFeedbackItems(feedbackRes.data as Feedback[]);
     setLoading(false);
   };
 
@@ -96,6 +102,12 @@ export const AdminPage = () => {
   const totalUsers = users.length;
   const totalRides = rides.length;
   const totalAdmins = users.filter((u) => u.is_admin).length;
+  const newFeedback = feedbackItems.filter((f) => f.status === 'new').length;
+
+  const updateFeedbackStatus = async (id: string, status: string) => {
+    await supabase.from('feedback').update({ status }).eq('id', id);
+    fetchData();
+  };
 
   const tabStyles = (active: boolean): React.CSSProperties => ({
     padding: '10px 20px',
@@ -166,6 +178,28 @@ export const AdminPage = () => {
         </button>
         <button style={tabStyles(tab === 'rides')} onClick={() => setTab('rides')}>
           Rides
+        </button>
+        <button
+          style={{
+            ...tabStyles(tab === 'feedback'),
+            position: 'relative' as const,
+          }}
+          onClick={() => setTab('feedback')}
+        >
+          Feedback
+          {feedbackItems.filter((f) => f.status === 'new').length > 0 && (
+            <span
+              style={{
+                position: 'absolute',
+                top: '4px',
+                right: '4px',
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                backgroundColor: COLORS.danger,
+              }}
+            />
+          )}
         </button>
       </div>
 
@@ -252,6 +286,34 @@ export const AdminPage = () => {
               }}
             >
               {totalAdmins}
+            </div>
+          </div>
+
+          <div style={statCardStyles}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+              <MessageCircle size={20} color={COLORS.accent} />
+              <span
+                style={{
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  fontFamily: 'JetBrains Mono, monospace',
+                  color: COLORS.textMuted,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                }}
+              >
+                New Feedback
+              </span>
+            </div>
+            <div
+              style={{
+                fontSize: '36px',
+                fontWeight: 800,
+                fontFamily: 'JetBrains Mono, monospace',
+                color: newFeedback > 0 ? COLORS.accent : COLORS.textPrimary,
+              }}
+            >
+              {newFeedback}
             </div>
           </div>
         </div>
@@ -391,6 +453,173 @@ export const AdminPage = () => {
             >
               No rides yet.
             </p>
+          )}
+        </div>
+      )}
+
+      {tab === 'feedback' && (
+        <div>
+          {feedbackItems.length === 0 ? (
+            <p
+              style={{
+                textAlign: 'center',
+                padding: '40px',
+                color: COLORS.textMuted,
+                fontFamily: 'DM Sans, sans-serif',
+              }}
+            >
+              No feedback yet.
+            </p>
+          ) : (
+            feedbackItems.map((fb) => {
+              const typeColors: Record<string, string> = {
+                bug: COLORS.danger,
+                feature: COLORS.accent,
+                general: COLORS.warning,
+              };
+              const typeColor = typeColors[fb.type] || COLORS.textMuted;
+
+              return (
+                <div
+                  key={fb.id}
+                  style={{
+                    ...tableRowStyles,
+                    flexDirection: 'column',
+                    alignItems: 'stretch',
+                    opacity: fb.status === 'dismissed' ? 0.5 : 1,
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '8px',
+                      marginBottom: '8px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span
+                        style={{
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          fontFamily: 'JetBrains Mono, monospace',
+                          color: typeColor,
+                          backgroundColor: typeColor + '18',
+                          padding: '2px 10px',
+                          borderRadius: '20px',
+                          textTransform: 'uppercase',
+                          border: `1px solid ${typeColor}30`,
+                        }}
+                      >
+                        {fb.type}
+                      </span>
+                      {fb.status === 'new' && (
+                        <span
+                          style={{
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            fontFamily: 'JetBrains Mono, monospace',
+                            color: COLORS.accent,
+                            textTransform: 'uppercase',
+                          }}
+                        >
+                          NEW
+                        </span>
+                      )}
+                      {fb.status === 'done' && (
+                        <CheckCircle size={14} color={COLORS.accent} />
+                      )}
+                    </div>
+                    <span
+                      style={{
+                        fontSize: '12px',
+                        fontFamily: 'DM Sans, sans-serif',
+                        color: COLORS.textMuted,
+                      }}
+                    >
+                      {new Date(fb.created_at).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                      })}
+                    </span>
+                  </div>
+
+                  <p
+                    style={{
+                      fontSize: '14px',
+                      fontFamily: 'DM Sans, sans-serif',
+                      color: COLORS.textPrimary,
+                      lineHeight: 1.6,
+                      marginBottom: '8px',
+                    }}
+                  >
+                    {fb.message}
+                  </p>
+
+                  {fb.contact_info && (
+                    <p
+                      style={{
+                        fontSize: '12px',
+                        fontFamily: 'DM Sans, sans-serif',
+                        color: COLORS.textMuted,
+                        marginBottom: '8px',
+                      }}
+                    >
+                      Contact: {fb.contact_info}
+                    </p>
+                  )}
+
+                  {fb.user_id && (
+                    <p
+                      style={{
+                        fontSize: '12px',
+                        fontFamily: 'DM Sans, sans-serif',
+                        color: COLORS.textMuted,
+                        marginBottom: '8px',
+                      }}
+                    >
+                      From: {users.find((u) => u.id === fb.user_id)?.full_name || fb.user_id}
+                    </p>
+                  )}
+
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    {fb.status === 'new' && (
+                      <Button
+                        variant="ghost"
+                        onClick={() => updateFeedbackStatus(fb.id, 'reviewed')}
+                        style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}
+                      >
+                        <Eye size={14} />
+                        Mark Reviewed
+                      </Button>
+                    )}
+                    {(fb.status === 'new' || fb.status === 'reviewed') && (
+                      <Button
+                        variant="ghost"
+                        onClick={() => updateFeedbackStatus(fb.id, 'done')}
+                        style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}
+                      >
+                        <CheckCircle size={14} />
+                        Done
+                      </Button>
+                    )}
+                    {fb.status !== 'dismissed' && (
+                      <Button
+                        variant="danger"
+                        onClick={() => updateFeedbackStatus(fb.id, 'dismissed')}
+                        style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}
+                      >
+                        <X size={14} />
+                        Dismiss
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              );
+            })
           )}
         </div>
       )}

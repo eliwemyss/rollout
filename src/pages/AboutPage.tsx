@@ -1,4 +1,5 @@
-import { ExternalLink, Github, MessageCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Github, MessageCircle } from 'lucide-react';
 import { COLORS } from '../lib/colors';
 
 export const AboutPage = () => {
@@ -92,8 +93,8 @@ export const AboutPage = () => {
           Let us know.
         </p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-          <a
-            href="mailto:eliwemyss@gmail.com?subject=Rollout Feedback"
+          <Link
+            to="/feedback"
             style={linkStyles}
             onMouseEnter={(e) => {
               e.currentTarget.style.borderColor = COLORS.accent;
@@ -106,7 +107,7 @@ export const AboutPage = () => {
           >
             <MessageCircle size={16} />
             Send Feedback
-          </a>
+          </Link>
           <a
             href="https://github.com/eliwemyss/rollout"
             target="_blank"
