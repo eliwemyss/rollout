@@ -1,14 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Support both Vite and standard Supabase env var naming conventions
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || import.meta.env.SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.SUPABASE_ANON_KEY;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+console.log('[v0] Supabase URL:', supabaseUrl ? 'SET' : 'MISSING');
+console.log('[v0] Supabase Anon Key:', supabaseAnonKey ? 'SET' : 'MISSING');
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables. Please ensure SUPABASE_URL and SUPABASE_ANON_KEY are set.');
+  console.error('[v0] Missing Supabase environment variables');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '', {
   auth: {
     detectSessionInUrl: true,
     flowType: 'pkce',
