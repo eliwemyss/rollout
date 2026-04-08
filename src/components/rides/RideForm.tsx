@@ -123,9 +123,9 @@ export const RideForm = ({
         helperText="Expected riding pace or difficulty"
       />
       <Input
-        type="url"
+        type="text"
         name="route_link"
-        label="Route Link"
+        label="Route Link (optional)"
         placeholder="Paste a Strava, RideWithGPS, or Google Maps link"
         value={formData.route_link}
         onChange={handleChange}

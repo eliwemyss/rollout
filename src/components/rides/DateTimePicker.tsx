@@ -63,8 +63,12 @@ export const DateTimePicker = ({ value, onChange, required }: DateTimePickerProp
   useEffect(() => {
     if (selectedDay !== null) {
       const { hours, minutes } = parseTimeSlot(selectedTime);
-      const d = new Date(viewYear, viewMonth, selectedDay, hours, minutes);
-      onChange(d.toISOString().slice(0, 16));
+      // Build a local datetime string (YYYY-MM-DDTHH:MM) without UTC conversion
+      const mm = String(viewMonth + 1).padStart(2, '0');
+      const dd = String(selectedDay).padStart(2, '0');
+      const hh = String(hours).padStart(2, '0');
+      const mi = String(minutes).padStart(2, '0');
+      onChange(`${viewYear}-${mm}-${dd}T${hh}:${mi}`);
     }
   }, [selectedDay, selectedTime, viewYear, viewMonth]);
 
