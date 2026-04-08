@@ -246,6 +246,17 @@ export const SeriesDetailPage = () => {
             <Clock size={16} style={{ color: COLORS.textMuted, flexShrink: 0 }} />
             {formatTime12h(series.start_time)}
           </span>
+          {(series.start_date || series.end_date) && (
+            <span style={infoItemStyles}>
+              <Calendar size={16} style={{ color: COLORS.textMuted, flexShrink: 0 }} />
+              {series.start_date && series.end_date
+                ? `${new Date(series.start_date + 'T00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${new Date(series.end_date + 'T00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+                : series.end_date
+                  ? `Through ${new Date(series.end_date + 'T00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+                  : `Starting ${new Date(series.start_date! + 'T00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+              }
+            </span>
+          )}
         </div>
 
         {(series.pace || series.distance_miles) && (

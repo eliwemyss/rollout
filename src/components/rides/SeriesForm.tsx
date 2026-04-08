@@ -23,6 +23,8 @@ export interface SeriesFormData {
   pace: string;
   route_link: string;
   tags: string[];
+  start_date: string;
+  end_date: string;
 }
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -42,6 +44,8 @@ export const SeriesForm = ({
     pace: initialData?.pace || '',
     route_link: initialData?.route_link || '',
     tags: initialData?.tags || [],
+    start_date: initialData?.start_date || '',
+    end_date: initialData?.end_date || '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -166,6 +170,25 @@ export const SeriesForm = ({
           value={formData.start_time}
           onChange={handleChange}
           required
+        />
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+        <Input
+          type="date"
+          name="start_date"
+          label="Season Start"
+          value={formData.start_date}
+          onChange={handleChange}
+          helperText="Leave blank to start immediately"
+        />
+        <Input
+          type="date"
+          name="end_date"
+          label="Season End"
+          value={formData.end_date}
+          onChange={handleChange}
+          helperText="Leave blank for evergreen"
         />
       </div>
 

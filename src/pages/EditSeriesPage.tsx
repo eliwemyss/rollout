@@ -57,6 +57,8 @@ export const EditSeriesPage = () => {
         pace: formData.pace || null,
         route_link: formData.route_link || null,
         tags: formData.tags.length > 0 ? formData.tags : [],
+        start_date: formData.start_date || null,
+        end_date: formData.end_date || null,
       })
       .eq('id', id);
 

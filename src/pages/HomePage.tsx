@@ -312,6 +312,18 @@ export const HomePage = () => {
               ))}
             </div>
           )}
+          {s.end_date && (
+            <p
+              style={{
+                marginTop: '8px',
+                fontSize: '12px',
+                fontFamily: 'DM Sans, sans-serif',
+                color: COLORS.textMuted,
+              }}
+            >
+              Through {new Date(s.end_date + 'T00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            </p>
+          )}
           {s.nextRide && (
             <p
               style={{
