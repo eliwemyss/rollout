@@ -33,6 +33,7 @@ export const HomePage = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [rides, setRides] = useState<RideWithCreator[]>([]);
+  const [rideParticipantCounts, setRideParticipantCounts] = useState<Record<string, number>>({});
   const [seriesList, setSeriesList] = useState<SeriesWithNextRide[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
@@ -111,6 +112,19 @@ export const HomePage = () => {
 
         if (!error && data) {
           setRides(data as RideWithCreator[]);
+
+          // Fetch participant counts for these rides
+          if (data.length > 0) {
+            const counts: Record<string, number> = {};
+            for (const r of data) {
+              const { count } = await supabase
+                .from('participants')
+                .select('*', { count: 'exact', head: true })
+                .eq('ride_id', r.id);
+              counts[r.id] = count || 0;
+            }
+            setRideParticipantCounts(counts);
+          }
         }
       } else if (guestRideIds.length > 0) {
         const { data, error } = await supabase
@@ -230,6 +244,12 @@ export const HomePage = () => {
               <Calendar size={14} />
               {formatShortDate(ride.start_datetime)}
             </span>
+            {(rideParticipantCounts[ride.id] || 0) > 0 && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Users size={14} />
+                {rideParticipantCounts[ride.id]} going
+              </span>
+            )}
           </div>
         </div>
         <RideStatusBadge status={getRideStatus(ride.start_datetime)} />
@@ -308,12 +328,12 @@ export const HomePage = () => {
               <Calendar size={14} />
               {DAY_NAMES[s.day_of_week]}s at {formatTime12h(s.start_time)}
             </span>
-            {s.participantCount > 0 && (
-              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <Users size={14} />
-                {s.participantCount} {s.participantCount === 1 ? 'rider' : 'riders'}
-              </span>
-            )}
+            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Users size={14} />
+              {s.participantCount > 0
+                ? `${s.participantCount} ${s.participantCount === 1 ? 'rider' : 'riders'} going`
+                : 'Be the first to RSVP'}
+            </span>
           </div>
           {s.tags && s.tags.length > 0 && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '10px' }}>
