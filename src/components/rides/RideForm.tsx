@@ -3,6 +3,7 @@ import { Input } from '../common/Input';
 import { TextArea } from '../common/TextArea';
 import { Button } from '../common/Button';
 import { ErrorMessage } from '../common/ErrorMessage';
+import { DateTimePicker } from './DateTimePicker';
 import { Ride } from '../../types';
 
 interface RideFormProps {
@@ -96,12 +97,9 @@ export const RideForm = ({
         onChange={handleChange}
         required
       />
-      <Input
-        type="datetime-local"
-        name="start_datetime"
-        label="Date & Time"
+      <DateTimePicker
         value={formData.start_datetime}
-        onChange={handleChange}
+        onChange={(val) => setFormData({ ...formData, start_datetime: val })}
         required
       />
       <Input
