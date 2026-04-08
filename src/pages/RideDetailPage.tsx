@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { Edit2, Trash2, X, ChevronLeft } from 'lucide-react';
+import { Edit2, Trash2, X, ChevronLeft, Repeat } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { useRide } from '../hooks/useRide';
@@ -332,6 +332,33 @@ export const RideDetailPage = () => {
           </div>
           <ShareLinkSection rideId={id!} />
         </>
+      )}
+
+      {ride.series_id && (
+        <Link
+          to={`/series/${ride.series_id}`}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '8px 14px',
+            borderRadius: '10px',
+            backgroundColor: COLORS.accentGlow,
+            border: `1px solid ${COLORS.accent}30`,
+            color: COLORS.accent,
+            fontFamily: 'JetBrains Mono, monospace',
+            fontSize: '12px',
+            fontWeight: 700,
+            textDecoration: 'none',
+            marginBottom: '16px',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+            transition: 'border-color 0.2s ease',
+          }}
+        >
+          <Repeat size={12} />
+          Part of a Weekly Series →
+        </Link>
       )}
 
       <RideDetails ride={ride} />

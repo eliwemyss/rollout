@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus, MapPin, Calendar } from 'lucide-react';
+import { Plus, MapPin, Calendar, Repeat, Users, ChevronRight } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { COLORS } from '../lib/colors';
-import { RideWithCreator } from '../types';
+import { RideWithCreator, RideSeriesWithCreator } from '../types';
 import { formatShortDate } from '../utils/dateHelpers';
 import { getRideStatus } from '../utils/rideStatus';
 import { RideStatusBadge } from '../components/rides/RideStatusBadge';
@@ -13,29 +13,93 @@ import { Button } from '../components/common/Button';
 import { GoogleAuthButton } from '../components/auth/GoogleAuthButton';
 import { getGuestJoins } from '../utils/guestStorage';
 
+const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+const formatTime12h = (time: string) => {
+  const [h, m] = time.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 || 12;
+  return `${h12}:${m.toString().padStart(2, '0')} ${ampm}`;
+};
+
+interface SeriesWithNextRide extends RideSeriesWithCreator {
+  nextRide?: RideWithCreator;
+  participantCount: number;
+}
+
 export const HomePage = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [rides, setRides] = useState<RideWithCreator[]>([]);
+  const [seriesList, setSeriesList] = useState<SeriesWithNextRide[]>([]);
   const [loading, setLoading] = useState(true);
 
   const guestJoins = !user ? getGuestJoins() : [];
   const guestRideIds = guestJoins.map((j) => j.rideId);
 
   useEffect(() => {
-    const fetchRides = async () => {
+    const fetchData = async () => {
+      // 1. Always fetch active series (public for everyone)
+      const { data: seriesData } = await supabase
+        .from('ride_series')
+        .select('*, creator:profiles!creator_id(*)')
+        .eq('is_active', true)
+        .order('day_of_week', { ascending: true });
+
+      if (seriesData && seriesData.length > 0) {
+        // Generate next ride for each series
+        const seriesWithRides: SeriesWithNextRide[] = [];
+
+        for (const s of seriesData) {
+          // Generate/get next ride
+          const { data: rideId } = await supabase.rpc('generate_next_series_ride', {
+            p_series_id: s.id,
+          });
+
+          let nextRide: RideWithCreator | undefined;
+          let participantCount = 0;
+
+          if (rideId) {
+            const { data: rideData } = await supabase
+              .from('rides')
+              .select('*, creator:profiles!creator_id(*)')
+              .eq('id', rideId)
+              .single();
+
+            if (rideData) {
+              nextRide = rideData as RideWithCreator;
+
+              const { count } = await supabase
+                .from('participants')
+                .select('*', { count: 'exact', head: true })
+                .eq('ride_id', rideId);
+
+              participantCount = count || 0;
+            }
+          }
+
+          seriesWithRides.push({
+            ...(s as RideSeriesWithCreator),
+            nextRide,
+            participantCount,
+          });
+        }
+
+        setSeriesList(seriesWithRides);
+      }
+
+      // 2. Fetch user's rides (non-series, personal rides)
       if (user) {
-        // Authenticated: fetch all rides
         const { data, error } = await supabase
           .from('rides')
           .select('*, creator:profiles!creator_id(*)')
+          .is('series_id', null)
           .order('start_datetime', { ascending: true });
 
         if (!error && data) {
           setRides(data as RideWithCreator[]);
         }
       } else if (guestRideIds.length > 0) {
-        // Guest with joins: fetch only their rides
         const { data, error } = await supabase
           .from('rides')
           .select('*, creator:profiles!creator_id(*)')
@@ -46,72 +110,17 @@ export const HomePage = () => {
           setRides(data as RideWithCreator[]);
         }
       }
+
       setLoading(false);
     };
 
     if (!authLoading) {
-      fetchRides();
+      fetchData();
     }
   }, [authLoading]);
 
   if (authLoading || loading) {
     return <LoadingSpinner />;
-  }
-
-  // Unauthenticated user with no guest joins — show landing page
-  if (!user && guestRideIds.length === 0) {
-    return (
-      <div style={{ textAlign: 'center', padding: '80px 20px' }}>
-        <h1
-          style={{
-            fontSize: '48px',
-            fontWeight: 800,
-            fontFamily: 'JetBrains Mono, monospace',
-            color: COLORS.textPrimary,
-            marginBottom: '16px',
-          }}
-        >
-          rollout
-        </h1>
-        <p
-          style={{
-            fontSize: '18px',
-            fontFamily: 'DM Sans, sans-serif',
-            color: COLORS.textSecondary,
-            marginBottom: '40px',
-            maxWidth: '480px',
-            margin: '0 auto 40px',
-            lineHeight: 1.6,
-          }}
-        >
-          Organize group rides, share routes, and ride together.
-        </p>
-        <div style={{ maxWidth: '320px', margin: '0 auto' }}>
-          <GoogleAuthButton />
-          <p
-            style={{
-              marginTop: '16px',
-              fontSize: '13px',
-              fontFamily: 'DM Sans, sans-serif',
-              color: COLORS.textMuted,
-            }}
-          >
-            or{' '}
-            <Link
-              to="/login"
-              style={{
-                color: COLORS.textSecondary,
-                textDecoration: 'none',
-                borderBottom: `1px solid ${COLORS.borderLight}`,
-                transition: 'color 0.2s ease',
-              }}
-            >
-              sign in with email
-            </Link>
-          </p>
-        </div>
-      </div>
-    );
   }
 
   const upcomingRides = rides.filter(
@@ -215,6 +224,151 @@ export const HomePage = () => {
     </Link>
   );
 
+  const renderSeriesCard = (s: SeriesWithNextRide) => (
+    <Link
+      key={s.id}
+      to={s.nextRide ? `/ride/${s.nextRide.id}` : `/series/${s.id}`}
+      style={{
+        ...cardStyles,
+        borderColor: COLORS.accent + '30',
+        position: 'relative' as const,
+        overflow: 'hidden',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = COLORS.accent + '60';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = COLORS.accent + '30';
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          gap: '12px',
+        }}
+      >
+        <div style={{ flex: 1 }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              marginBottom: '8px',
+            }}
+          >
+            <h3
+              style={{
+                fontSize: '17px',
+                fontWeight: 700,
+                fontFamily: 'DM Sans, sans-serif',
+                color: COLORS.textPrimary,
+              }}
+            >
+              {s.title}
+            </h3>
+            <Repeat size={14} style={{ color: COLORS.accent, flexShrink: 0 }} />
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '16px',
+              fontSize: '13px',
+              fontFamily: 'DM Sans, sans-serif',
+              color: COLORS.textSecondary,
+            }}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <MapPin size={14} />
+              {s.start_location}
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Calendar size={14} />
+              {DAY_NAMES[s.day_of_week]}s at {formatTime12h(s.start_time)}
+            </span>
+            {s.participantCount > 0 && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Users size={14} />
+                {s.participantCount} {s.participantCount === 1 ? 'rider' : 'riders'}
+              </span>
+            )}
+          </div>
+          {s.nextRide && (
+            <p
+              style={{
+                marginTop: '10px',
+                fontSize: '12px',
+                fontFamily: 'JetBrains Mono, monospace',
+                color: COLORS.accent,
+                fontWeight: 600,
+              }}
+            >
+              Next ride: {formatShortDate(s.nextRide.start_datetime)} →
+            </p>
+          )}
+        </div>
+      </div>
+    </Link>
+  );
+
+  // Unauthenticated with no guest joins — show landing with series
+  if (!user && guestRideIds.length === 0 && seriesList.length === 0) {
+    return (
+      <div style={{ textAlign: 'center', padding: '80px 20px' }}>
+        <h1
+          style={{
+            fontSize: '48px',
+            fontWeight: 800,
+            fontFamily: 'JetBrains Mono, monospace',
+            color: COLORS.textPrimary,
+            marginBottom: '16px',
+          }}
+        >
+          rollout
+        </h1>
+        <p
+          style={{
+            fontSize: '18px',
+            fontFamily: 'DM Sans, sans-serif',
+            color: COLORS.textSecondary,
+            marginBottom: '40px',
+            maxWidth: '480px',
+            margin: '0 auto 40px',
+            lineHeight: 1.6,
+          }}
+        >
+          Organize group rides, share routes, and ride together.
+        </p>
+        <div style={{ maxWidth: '320px', margin: '0 auto' }}>
+          <GoogleAuthButton />
+          <p
+            style={{
+              marginTop: '16px',
+              fontSize: '13px',
+              fontFamily: 'DM Sans, sans-serif',
+              color: COLORS.textMuted,
+            }}
+          >
+            or{' '}
+            <Link
+              to="/login"
+              style={{
+                color: COLORS.textSecondary,
+                textDecoration: 'none',
+                borderBottom: `1px solid ${COLORS.borderLight}`,
+                transition: 'color 0.2s ease',
+              }}
+            >
+              sign in with email
+            </Link>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto' }}>
       {!user && (
@@ -241,30 +395,15 @@ export const HomePage = () => {
               flex: 1,
             }}
           >
-            Sign in to see all rides and create your own
+            Sign in to create rides and manage your RSVPs
           </p>
-          <Link
-            to="/login"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              padding: '8px 16px',
-              borderRadius: '10px',
-              border: `1px solid ${COLORS.borderLight}`,
-              background: 'transparent',
-              color: COLORS.textPrimary,
-              fontFamily: 'JetBrains Mono, monospace',
-              fontSize: '13px',
-              fontWeight: 700,
-              textDecoration: 'none',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            Sign In
-          </Link>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <GoogleAuthButton />
+          </div>
         </div>
       )}
 
+      {/* Header */}
       <div
         style={{
           display: 'flex',
@@ -281,46 +420,58 @@ export const HomePage = () => {
             color: COLORS.textPrimary,
           }}
         >
-          {user ? 'Dashboard' : 'Your Rides'}
+          {user ? 'Dashboard' : 'rollout'}
         </h1>
         {user && (
-          <Button
-            onClick={() => navigate('/ride/new')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-            }}
-          >
-            <Plus size={16} />
-            New Ride
-          </Button>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <Button
+              variant="ghost"
+              onClick={() => navigate('/series/new')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+            >
+              <Repeat size={16} />
+              New Series
+            </Button>
+            <Button
+              onClick={() => navigate('/ride/new')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+            >
+              <Plus size={16} />
+              New Ride
+            </Button>
+          </div>
         )}
       </div>
 
-      {rides.length === 0 ? (
-        <div
-          style={{
-            textAlign: 'center',
-            padding: '60px 20px',
-            color: COLORS.textSecondary,
-            fontFamily: 'DM Sans, sans-serif',
-          }}
-        >
-          <p style={{ fontSize: '16px', marginBottom: '8px' }}>
-            No rides yet.
-          </p>
-          <p style={{ fontSize: '14px', color: COLORS.textMuted }}>
-            {user
-              ? 'Create your first ride to get started.'
-              : 'Join a ride via a shared link to see it here.'}
-          </p>
-        </div>
-      ) : (
+      {/* Weekly Rides Section - always visible */}
+      {seriesList.length > 0 && (
+        <>
+          <h2 style={sectionTitleStyles}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Repeat size={14} />
+              Weekly Rides
+            </span>
+          </h2>
+          {seriesList.map((s) => renderSeriesCard(s))}
+        </>
+      )}
+
+      {/* Personal rides section */}
+      {(rides.length > 0 || user) && (
         <>
           {upcomingRides.length > 0 && (
             <>
-              <h2 style={sectionTitleStyles}>Upcoming</h2>
+              <h2 style={sectionTitleStyles}>
+                {user ? 'Your Upcoming Rides' : 'Your Rides'}
+              </h2>
               {upcomingRides.map((ride) => renderRideCard(ride))}
             </>
           )}
@@ -330,6 +481,21 @@ export const HomePage = () => {
               <h2 style={sectionTitleStyles}>Past Rides</h2>
               {pastRides.map((ride) => renderRideCard(ride, true))}
             </>
+          )}
+
+          {user && rides.length === 0 && (
+            <div
+              style={{
+                textAlign: 'center',
+                padding: '40px 20px',
+                color: COLORS.textSecondary,
+                fontFamily: 'DM Sans, sans-serif',
+              }}
+            >
+              <p style={{ fontSize: '14px', color: COLORS.textMuted }}>
+                No one-off rides yet. Create one or RSVP to a weekly ride above.
+              </p>
+            </div>
           )}
         </>
       )}

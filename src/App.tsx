@@ -10,6 +10,9 @@ import { RideDetailPage } from './pages/RideDetailPage';
 import { EditRidePage } from './pages/EditRidePage';
 import { AuthCallbackPage } from './pages/AuthCallbackPage';
 import { AdminPage } from './pages/AdminPage';
+import { NewSeriesPage } from './pages/NewSeriesPage';
+import { SeriesDetailPage } from './pages/SeriesDetailPage';
+import { EditSeriesPage } from './pages/EditSeriesPage';
 
 function App() {
   return (
@@ -30,6 +33,23 @@ function App() {
               }
             />
             <Route path="/ride/:id" element={<RideDetailPage />} />
+            <Route
+              path="/series/new"
+              element={
+                <ProtectedRoute>
+                  <NewSeriesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/series/:id" element={<SeriesDetailPage />} />
+            <Route
+              path="/series/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <EditSeriesPage />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/admin"
               element={

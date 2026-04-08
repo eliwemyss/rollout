@@ -8,6 +8,26 @@ export interface Profile {
   updated_at: string;
 }
 
+export interface RideSeries {
+  id: string;
+  creator_id: string;
+  title: string;
+  description?: string;
+  start_location: string;
+  day_of_week: number; // 0=Sunday, 6=Saturday
+  start_time: string; // HH:MM:SS
+  distance_miles?: number;
+  pace?: string;
+  route_link?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RideSeriesWithCreator extends RideSeries {
+  creator?: Profile;
+}
+
 export interface Ride {
   id: string;
   creator_id: string;
@@ -18,6 +38,7 @@ export interface Ride {
   distance_miles?: number;
   pace?: string;
   route_link?: string;
+  series_id?: string;
   created_at: string;
   updated_at: string;
 }
