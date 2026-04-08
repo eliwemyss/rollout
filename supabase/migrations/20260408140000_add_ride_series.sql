@@ -143,8 +143,16 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- Grant anon and authenticated the ability to call this function
 GRANT EXECUTE ON FUNCTION generate_next_series_ride(UUID) TO anon, authenticated;
 
--- 7. Updated_at trigger for series
+-- 7. Updated_at trigger for series (manual function, no extension needed)
+CREATE OR REPLACE FUNCTION set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE TRIGGER set_series_updated_at
   BEFORE UPDATE ON ride_series
   FOR EACH ROW
-  EXECUTE FUNCTION moddatetime(updated_at);
+  EXECUTE FUNCTION set_updated_at();
