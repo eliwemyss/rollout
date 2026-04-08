@@ -321,6 +321,16 @@ export const RideDetailPage = () => {
               <Edit2 size={16} />
               Edit Ride
             </Button>
+            {!ride.series_id && (
+              <Button
+                variant="ghost"
+                onClick={() => navigate(`/ride/${id}/convert-to-series`)}
+                style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+              >
+                <Repeat size={16} />
+                Make It a Series
+              </Button>
+            )}
             <Button
               variant="danger"
               onClick={() => setShowDeleteConfirm(true)}

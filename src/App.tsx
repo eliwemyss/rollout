@@ -13,6 +13,7 @@ import { AdminPage } from './pages/AdminPage';
 import { NewSeriesPage } from './pages/NewSeriesPage';
 import { SeriesDetailPage } from './pages/SeriesDetailPage';
 import { EditSeriesPage } from './pages/EditSeriesPage';
+import { ConvertToSeriesPage } from './pages/ConvertToSeriesPage';
 import { AboutPage } from './pages/AboutPage';
 import { FeedbackPage } from './pages/FeedbackPage';
 
@@ -35,6 +36,14 @@ function App() {
               }
             />
             <Route path="/ride/:id" element={<RideDetailPage />} />
+            <Route
+              path="/ride/:id/convert-to-series"
+              element={
+                <ProtectedRoute>
+                  <ConvertToSeriesPage />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/series/new"
               element={
