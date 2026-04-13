@@ -11,9 +11,8 @@ Group cycling app for organizing rides, built with React + Supabase + Vercel.
 
 ## Supabase
 
-- **Project ref:** `hkffusvwupnwciivzvox`
 - **Migrations live in:** `supabase/migrations/`
-- **IMPORTANT:** Always deploy migrations via the Supabase CLI. The user runs `npx supabase db push` from the project root. If the project isn't linked yet, walk them through `npx supabase init` + `npx supabase link --project-ref hkffusvwupnwciivzvox` first. Never use placeholder passwords — just tell the user to run the commands and enter their DB password when prompted. Always provide the exact terminal commands to copy-paste.
+- **IMPORTANT:** Always deploy migrations via the Supabase CLI. The user runs `npx supabase db push` from the project root. If the project isn't linked yet, walk them through `npx supabase init` + `npx supabase link` first. Never use placeholder passwords — just tell the user to run the commands and enter their DB password when prompted. Always provide the exact terminal commands to copy-paste. Always copy the migration SQL to the user's clipboard so they can paste it in the Supabase Dashboard SQL Editor as a fallback.
 
 ## Deploy
 - Push to `main` and Vercel auto-deploys
@@ -27,5 +26,4 @@ Group cycling app for organizing rides, built with React + Supabase + Vercel.
 - One-off rides are private (link-shared); series rides are public on homepage
 
 ## Admin
-- Initial admin: eliwemyss@gmail.com
 - Admin page at `/admin` with tabs: Overview, Users, Rides, Feedback
