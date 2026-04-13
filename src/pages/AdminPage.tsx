@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, Users, Bike, Trash2, ShieldCheck, ShieldOff, MessageCircle, CheckCircle, Eye, X } from 'lucide-react';
+import { Shield, Users, Bike, Trash2, ShieldCheck, ShieldOff, MessageCircle, CheckCircle, Eye, X, Archive, ChevronDown, ChevronRight, RotateCcw } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { COLORS } from '../lib/colors';
@@ -20,6 +20,7 @@ export const AdminPage = () => {
   const [rides, setRides] = useState<RideWithCreator[]>([]);
   const [feedbackItems, setFeedbackItems] = useState<Feedback[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showCompleted, setShowCompleted] = useState(false);
   const [confirmAction, setConfirmAction] = useState<{
     title: string;
     message: string;
@@ -457,172 +458,258 @@ export const AdminPage = () => {
         </div>
       )}
 
-      {tab === 'feedback' && (
-        <div>
-          {feedbackItems.length === 0 ? (
-            <p
+      {tab === 'feedback' && (() => {
+        const activeFeedback = feedbackItems.filter((f) => f.status === 'new' || f.status === 'reviewed');
+        const completedFeedback = feedbackItems.filter((f) => f.status === 'done' || f.status === 'dismissed');
+
+        const renderFeedbackCard = (fb: Feedback, isCompleted: boolean) => {
+          const typeColors: Record<string, string> = {
+            bug: COLORS.danger,
+            feature: COLORS.accent,
+            general: COLORS.warning,
+          };
+          const typeColor = typeColors[fb.type] || COLORS.textMuted;
+
+          return (
+            <div
+              key={fb.id}
               style={{
-                textAlign: 'center',
-                padding: '40px',
-                color: COLORS.textMuted,
-                fontFamily: 'DM Sans, sans-serif',
+                ...tableRowStyles,
+                flexDirection: 'column',
+                alignItems: 'stretch',
+                opacity: fb.status === 'dismissed' ? 0.5 : 1,
               }}
             >
-              No feedback yet.
-            </p>
-          ) : (
-            feedbackItems.map((fb) => {
-              const typeColors: Record<string, string> = {
-                bug: COLORS.danger,
-                feature: COLORS.accent,
-                general: COLORS.warning,
-              };
-              const typeColor = typeColors[fb.type] || COLORS.textMuted;
-
-              return (
-                <div
-                  key={fb.id}
-                  style={{
-                    ...tableRowStyles,
-                    flexDirection: 'column',
-                    alignItems: 'stretch',
-                    opacity: fb.status === 'dismissed' ? 0.5 : 1,
-                  }}
-                >
-                  <div
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '8px',
+                  marginBottom: '8px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span
                     style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: '8px',
-                      marginBottom: '8px',
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      fontFamily: 'JetBrains Mono, monospace',
+                      color: typeColor,
+                      backgroundColor: typeColor + '18',
+                      padding: '2px 10px',
+                      borderRadius: '20px',
+                      textTransform: 'uppercase',
+                      border: `1px solid ${typeColor}30`,
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span
-                        style={{
-                          fontSize: '11px',
-                          fontWeight: 700,
-                          fontFamily: 'JetBrains Mono, monospace',
-                          color: typeColor,
-                          backgroundColor: typeColor + '18',
-                          padding: '2px 10px',
-                          borderRadius: '20px',
-                          textTransform: 'uppercase',
-                          border: `1px solid ${typeColor}30`,
-                        }}
-                      >
-                        {fb.type}
-                      </span>
-                      {fb.status === 'new' && (
-                        <span
-                          style={{
-                            fontSize: '11px',
-                            fontWeight: 700,
-                            fontFamily: 'JetBrains Mono, monospace',
-                            color: COLORS.accent,
-                            textTransform: 'uppercase',
-                          }}
-                        >
-                          NEW
-                        </span>
-                      )}
-                      {fb.status === 'done' && (
-                        <CheckCircle size={14} color={COLORS.accent} />
-                      )}
-                    </div>
+                    {fb.type}
+                  </span>
+                  {fb.status === 'new' && (
                     <span
                       style={{
-                        fontSize: '12px',
-                        fontFamily: 'DM Sans, sans-serif',
-                        color: COLORS.textMuted,
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        fontFamily: 'JetBrains Mono, monospace',
+                        color: COLORS.accent,
+                        textTransform: 'uppercase',
                       }}
                     >
-                      {new Date(fb.created_at).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        hour: 'numeric',
-                        minute: '2-digit',
-                      })}
+                      NEW
                     </span>
-                  </div>
+                  )}
+                  {fb.status === 'done' && (
+                    <CheckCircle size={14} color={COLORS.accent} />
+                  )}
+                  {fb.status === 'dismissed' && (
+                    <span
+                      style={{
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        fontFamily: 'JetBrains Mono, monospace',
+                        color: COLORS.textMuted,
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      DISMISSED
+                    </span>
+                  )}
+                </div>
+                <span
+                  style={{
+                    fontSize: '12px',
+                    fontFamily: 'DM Sans, sans-serif',
+                    color: COLORS.textMuted,
+                  }}
+                >
+                  {new Date(fb.created_at).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                  })}
+                </span>
+              </div>
 
+              <p
+                style={{
+                  fontSize: '14px',
+                  fontFamily: 'DM Sans, sans-serif',
+                  color: COLORS.textPrimary,
+                  lineHeight: 1.6,
+                  marginBottom: '8px',
+                }}
+              >
+                {fb.message}
+              </p>
+
+              {fb.contact_info && (
+                <p
+                  style={{
+                    fontSize: '12px',
+                    fontFamily: 'DM Sans, sans-serif',
+                    color: COLORS.textMuted,
+                    marginBottom: '8px',
+                  }}
+                >
+                  Contact: {fb.contact_info}
+                </p>
+              )}
+
+              {fb.user_id && (
+                <p
+                  style={{
+                    fontSize: '12px',
+                    fontFamily: 'DM Sans, sans-serif',
+                    color: COLORS.textMuted,
+                    marginBottom: '8px',
+                  }}
+                >
+                  From: {users.find((u) => u.id === fb.user_id)?.full_name || fb.user_id}
+                </p>
+              )}
+
+              <div style={{ display: 'flex', gap: '8px' }}>
+                {fb.status === 'new' && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => updateFeedbackStatus(fb.id, 'reviewed')}
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}
+                  >
+                    <Eye size={14} />
+                    Mark Reviewed
+                  </Button>
+                )}
+                {(fb.status === 'new' || fb.status === 'reviewed') && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => updateFeedbackStatus(fb.id, 'done')}
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}
+                  >
+                    <CheckCircle size={14} />
+                    Done
+                  </Button>
+                )}
+                {isCompleted && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => updateFeedbackStatus(fb.id, 'new')}
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}
+                  >
+                    <RotateCcw size={14} />
+                    Reopen
+                  </Button>
+                )}
+                {!isCompleted && fb.status !== 'dismissed' && (
+                  <Button
+                    variant="danger"
+                    onClick={() => updateFeedbackStatus(fb.id, 'dismissed')}
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}
+                  >
+                    <X size={14} />
+                    Dismiss
+                  </Button>
+                )}
+              </div>
+            </div>
+          );
+        };
+
+        return (
+          <div>
+            {feedbackItems.length === 0 ? (
+              <p
+                style={{
+                  textAlign: 'center',
+                  padding: '40px',
+                  color: COLORS.textMuted,
+                  fontFamily: 'DM Sans, sans-serif',
+                }}
+              >
+                No feedback yet.
+              </p>
+            ) : (
+              <>
+                {activeFeedback.length === 0 && completedFeedback.length > 0 && (
                   <p
                     style={{
-                      fontSize: '14px',
+                      textAlign: 'center',
+                      padding: '32px',
+                      color: COLORS.textMuted,
                       fontFamily: 'DM Sans, sans-serif',
-                      color: COLORS.textPrimary,
-                      lineHeight: 1.6,
-                      marginBottom: '8px',
+                      fontSize: '14px',
                     }}
                   >
-                    {fb.message}
+                    All caught up — no active feedback.
                   </p>
+                )}
 
-                  {fb.contact_info && (
-                    <p
+                {activeFeedback.map((fb) => renderFeedbackCard(fb, false))}
+
+                {completedFeedback.length > 0 && (
+                  <div style={{ marginTop: activeFeedback.length > 0 ? '24px' : '0' }}>
+                    <button
+                      onClick={() => setShowCompleted(!showCompleted)}
                       style={{
-                        fontSize: '12px',
-                        fontFamily: 'DM Sans, sans-serif',
-                        color: COLORS.textMuted,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '10px 0',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        width: '100%',
                         marginBottom: '8px',
                       }}
                     >
-                      Contact: {fb.contact_info}
-                    </p>
-                  )}
+                      {showCompleted ? (
+                        <ChevronDown size={16} color={COLORS.textMuted} />
+                      ) : (
+                        <ChevronRight size={16} color={COLORS.textMuted} />
+                      )}
+                      <Archive size={14} color={COLORS.textMuted} />
+                      <span
+                        style={{
+                          fontSize: '12px',
+                          fontWeight: 700,
+                          fontFamily: 'JetBrains Mono, monospace',
+                          color: COLORS.textMuted,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px',
+                        }}
+                      >
+                        Completed ({completedFeedback.length})
+                      </span>
+                    </button>
 
-                  {fb.user_id && (
-                    <p
-                      style={{
-                        fontSize: '12px',
-                        fontFamily: 'DM Sans, sans-serif',
-                        color: COLORS.textMuted,
-                        marginBottom: '8px',
-                      }}
-                    >
-                      From: {users.find((u) => u.id === fb.user_id)?.full_name || fb.user_id}
-                    </p>
-                  )}
-
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    {fb.status === 'new' && (
-                      <Button
-                        variant="ghost"
-                        onClick={() => updateFeedbackStatus(fb.id, 'reviewed')}
-                        style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}
-                      >
-                        <Eye size={14} />
-                        Mark Reviewed
-                      </Button>
-                    )}
-                    {(fb.status === 'new' || fb.status === 'reviewed') && (
-                      <Button
-                        variant="ghost"
-                        onClick={() => updateFeedbackStatus(fb.id, 'done')}
-                        style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}
-                      >
-                        <CheckCircle size={14} />
-                        Done
-                      </Button>
-                    )}
-                    {fb.status !== 'dismissed' && (
-                      <Button
-                        variant="danger"
-                        onClick={() => updateFeedbackStatus(fb.id, 'dismissed')}
-                        style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}
-                      >
-                        <X size={14} />
-                        Dismiss
-                      </Button>
-                    )}
+                    {showCompleted && completedFeedback.map((fb) => renderFeedbackCard(fb, true))}
                   </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-      )}
+                )}
+              </>
+            )}
+          </div>
+        );
+      })()}
 
       {confirmAction && (
         <ConfirmDialog

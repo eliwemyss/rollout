@@ -1,4 +1,4 @@
-import { MapPin, Calendar, Gauge, Route, ExternalLink } from 'lucide-react';
+import { MapPin, Calendar, Gauge, Route, ExternalLink, Coffee } from 'lucide-react';
 import { RideWithCreator } from '../../types';
 import { COLORS } from '../../lib/colors';
 import { formatRideDateTime } from '../../utils/dateHelpers';
@@ -150,6 +150,23 @@ export const RideDetails = ({ ride }: RideDetailsProps) => {
             <div style={infoTextStyles}>
               <div style={labelStyles}>Pace</div>
               <div style={valueStyles}>{ride.pace}</div>
+            </div>
+          </div>
+        )}
+
+        {ride.coffee_shop_name && (
+          <div style={infoItemStyles}>
+            <div style={{ ...iconContainerStyles, backgroundColor: 'rgba(255, 184, 0, 0.08)' }}>
+              <Coffee size={20} color="#ffb800" />
+            </div>
+            <div style={infoTextStyles}>
+              <div style={labelStyles}>Coffee Stop</div>
+              <div style={valueStyles}>{ride.coffee_shop_name}</div>
+              {ride.coffee_shop_address && (
+                <div style={{ fontSize: '13px', color: COLORS.textSecondary, fontFamily: 'DM Sans, sans-serif', marginTop: '2px' }}>
+                  {ride.coffee_shop_address}
+                </div>
+              )}
             </div>
           </div>
         )}

@@ -25,6 +25,8 @@ export interface SeriesFormData {
   tags: string[];
   start_date: string;
   end_date: string;
+  coffee_shop_name: string;
+  coffee_shop_address: string;
 }
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -46,6 +48,8 @@ export const SeriesForm = ({
     tags: initialData?.tags || [],
     start_date: initialData?.start_date || '',
     end_date: initialData?.end_date || '',
+    coffee_shop_name: initialData?.coffee_shop_name || '',
+    coffee_shop_address: initialData?.coffee_shop_address || '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -224,6 +228,27 @@ export const SeriesForm = ({
         selected={formData.tags}
         onChange={(tags) => setFormData({ ...formData, tags })}
       />
+      {formData.tags.includes('cafe') && (
+        <>
+          <Input
+            type="text"
+            name="coffee_shop_name"
+            label="Coffee Shop"
+            placeholder="e.g., Barista Parlor"
+            value={formData.coffee_shop_name}
+            onChange={handleChange}
+            helperText="Where you're stopping for coffee"
+          />
+          <Input
+            type="text"
+            name="coffee_shop_address"
+            label="Coffee Shop Address"
+            placeholder="e.g., 519 Gallatin Ave, Nashville"
+            value={formData.coffee_shop_address}
+            onChange={handleChange}
+          />
+        </>
+      )}
       <Button type="submit" fullWidth disabled={loading}>
         {loading ? 'Saving...' : submitLabel}
       </Button>

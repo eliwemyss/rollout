@@ -22,6 +22,8 @@ export interface RideFormData {
   pace: string;
   route_link: string;
   tags: string[];
+  coffee_shop_name: string;
+  coffee_shop_address: string;
 }
 
 export const RideForm = ({
@@ -40,6 +42,8 @@ export const RideForm = ({
     pace: initialData?.pace || '',
     route_link: initialData?.route_link || '',
     tags: initialData?.tags || [],
+    coffee_shop_name: initialData?.coffee_shop_name || '',
+    coffee_shop_address: initialData?.coffee_shop_address || '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -141,6 +145,27 @@ export const RideForm = ({
         selected={formData.tags}
         onChange={(tags) => setFormData({ ...formData, tags })}
       />
+      {formData.tags.includes('cafe') && (
+        <>
+          <Input
+            type="text"
+            name="coffee_shop_name"
+            label="Coffee Shop"
+            placeholder="e.g., Barista Parlor"
+            value={formData.coffee_shop_name}
+            onChange={handleChange}
+            helperText="Where you're stopping for coffee"
+          />
+          <Input
+            type="text"
+            name="coffee_shop_address"
+            label="Coffee Shop Address"
+            placeholder="e.g., 519 Gallatin Ave, Nashville"
+            value={formData.coffee_shop_address}
+            onChange={handleChange}
+          />
+        </>
+      )}
       <Button type="submit" fullWidth disabled={loading}>
         {loading ? 'Saving...' : submitLabel}
       </Button>

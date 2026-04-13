@@ -20,6 +20,8 @@ export interface RideSeries {
   pace?: string;
   route_link?: string;
   tags?: string[];
+  coffee_shop_name?: string;
+  coffee_shop_address?: string;
   timezone: string;
   start_date?: string;
   end_date?: string;
@@ -44,6 +46,8 @@ export interface Ride {
   route_link?: string;
   series_id?: string;
   tags?: string[];
+  coffee_shop_name?: string;
+  coffee_shop_address?: string;
   created_at: string;
   updated_at: string;
 }

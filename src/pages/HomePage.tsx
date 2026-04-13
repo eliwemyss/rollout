@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus, MapPin, Calendar, Repeat, Users, ChevronRight } from 'lucide-react';
+import { Plus, MapPin, Calendar, Repeat, Users, ChevronRight, LayoutGrid, List } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabaseClient';
 import { COLORS } from '../lib/colors';
@@ -14,6 +14,7 @@ import { GoogleAuthButton } from '../components/auth/GoogleAuthButton';
 import { getGuestJoins } from '../utils/guestStorage';
 import { TagBadge } from '../components/rides/TagBadge';
 import { RIDE_TAGS } from '../lib/rideTags';
+import { WeekCalendar } from '../components/rides/WeekCalendar';
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -37,6 +38,8 @@ export const HomePage = () => {
   const [seriesList, setSeriesList] = useState<SeriesWithNextRide[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+  const [weekOffset, setWeekOffset] = useState(0);
 
   const guestJoins = !user ? getGuestJoins() : [];
   const guestRideIds = guestJoins.map((j) => j.rideId);
@@ -564,19 +567,90 @@ export const HomePage = () => {
       {/* Weekly Rides Section - always visible */}
       {seriesList.length > 0 && (
         <>
-          <h2 style={sectionTitleStyles}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Repeat size={14} />
-              Weekly Rides
-            </span>
-          </h2>
-          {seriesList
-            .filter((s) => !activeFilter || (s.tags && s.tags.includes(activeFilter)))
-            .map((s) => renderSeriesCard(s))}
-          {seriesList.filter((s) => !activeFilter || (s.tags && s.tags.includes(activeFilter))).length === 0 && (
-            <p style={{ fontSize: '14px', color: COLORS.textMuted, fontFamily: 'DM Sans, sans-serif', padding: '20px 0' }}>
-              No weekly rides match this filter.
-            </p>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '32px', marginBottom: '16px' }}>
+            <h2 style={{ ...sectionTitleStyles, marginTop: 0, marginBottom: 0 }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Repeat size={14} />
+                Weekly Rides
+              </span>
+            </h2>
+            <div
+              style={{
+                display: 'flex',
+                backgroundColor: COLORS.dark,
+                borderRadius: '8px',
+                border: `1px solid ${COLORS.border}`,
+                overflow: 'hidden',
+              }}
+            >
+              <button
+                onClick={() => setViewMode('list')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  padding: '6px 12px',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  fontFamily: 'JetBrains Mono, monospace',
+                  border: 'none',
+                  cursor: 'pointer',
+                  backgroundColor: viewMode === 'list' ? COLORS.borderLight : 'transparent',
+                  color: viewMode === 'list' ? COLORS.textPrimary : COLORS.textMuted,
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <List size={13} />
+                List
+              </button>
+              <button
+                onClick={() => setViewMode('calendar')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  padding: '6px 12px',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  fontFamily: 'JetBrains Mono, monospace',
+                  border: 'none',
+                  cursor: 'pointer',
+                  backgroundColor: viewMode === 'calendar' ? COLORS.borderLight : 'transparent',
+                  color: viewMode === 'calendar' ? COLORS.textPrimary : COLORS.textMuted,
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <LayoutGrid size={13} />
+                Week
+              </button>
+            </div>
+          </div>
+
+          {viewMode === 'list' ? (
+            <>
+              {seriesList
+                .filter((s) => !activeFilter || (s.tags && s.tags.includes(activeFilter)))
+                .map((s) => renderSeriesCard(s))}
+              {seriesList.filter((s) => !activeFilter || (s.tags && s.tags.includes(activeFilter))).length === 0 && (
+                <p style={{ fontSize: '14px', color: COLORS.textMuted, fontFamily: 'DM Sans, sans-serif', padding: '20px 0' }}>
+                  No weekly rides match this filter.
+                </p>
+              )}
+            </>
+          ) : (
+            <WeekCalendar
+              rides={seriesList
+                .filter((s) => !activeFilter || (s.tags && s.tags.includes(activeFilter)))
+                .filter((s) => s.nextRide)
+                .map((s) => s.nextRide!)}
+              participantCounts={Object.fromEntries(
+                seriesList
+                  .filter((s) => s.nextRide)
+                  .map((s) => [s.nextRide!.id, s.participantCount])
+              )}
+              weekOffset={weekOffset}
+              onWeekChange={setWeekOffset}
+            />
           )}
         </>
       )}

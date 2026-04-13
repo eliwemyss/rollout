@@ -23,6 +23,8 @@ export const NewRidePage = () => {
         pace: formData.pace || null,
         route_link: formData.route_link || null,
         tags: formData.tags.length > 0 ? formData.tags : [],
+        coffee_shop_name: formData.coffee_shop_name || null,
+        coffee_shop_address: formData.coffee_shop_address || null,
       })
       .select()
       .single();

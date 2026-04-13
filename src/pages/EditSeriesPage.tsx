@@ -59,6 +59,8 @@ export const EditSeriesPage = () => {
         tags: formData.tags.length > 0 ? formData.tags : [],
         start_date: formData.start_date || null,
         end_date: formData.end_date || null,
+        coffee_shop_name: formData.coffee_shop_name || null,
+        coffee_shop_address: formData.coffee_shop_address || null,
       })
       .eq('id', id);
 
