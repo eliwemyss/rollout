@@ -11,7 +11,7 @@ interface WeekCalendarProps {
   onWeekChange: (offset: number) => void;
 }
 
-const DAY_NAMES_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 const getWeekDates = (offset: number): Date[] => {
@@ -49,11 +49,9 @@ export const WeekCalendar = ({ rides, participantCounts, weekOffset, onWeekChang
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // Group rides by day of week index (0-6, Mon-Sun mapped)
+  // Group rides by day index
   const ridesByDay: Record<number, RideWithCreator[]> = {};
-  for (let i = 0; i < 7; i++) {
-    ridesByDay[i] = [];
-  }
+  for (let i = 0; i < 7; i++) ridesByDay[i] = [];
   rides.forEach((ride) => {
     const rideDate = new Date(ride.start_datetime);
     for (let i = 0; i < 7; i++) {
@@ -74,7 +72,7 @@ export const WeekCalendar = ({ rides, participantCounts, weekOffset, onWeekChang
 
   return (
     <div>
-      {/* Week navigation header */}
+      {/* Week navigation */}
       <div
         style={{
           display: 'flex',
@@ -143,34 +141,43 @@ export const WeekCalendar = ({ rides, participantCounts, weekOffset, onWeekChang
         </button>
       </div>
 
-      {/* Calendar grid */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(7, 1fr)',
-          gap: '6px',
-        }}
-      >
+      {/* Day rows */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
         {weekDates.map((date, i) => {
           const isToday = isSameDay(date, today);
           const dayRides = ridesByDay[i];
           const isPast = date < today && !isToday;
+          const hasRides = dayRides.length > 0;
 
           return (
             <div
               key={i}
               style={{
-                backgroundColor: COLORS.card,
-                border: `1px solid ${isToday ? COLORS.accent + '50' : COLORS.border}`,
+                display: 'flex',
+                alignItems: 'stretch',
+                gap: '0',
+                opacity: isPast ? 0.4 : 1,
                 borderRadius: '12px',
-                padding: '10px 8px',
-                minHeight: '120px',
-                opacity: isPast ? 0.5 : 1,
-                transition: 'border-color 0.2s ease',
+                overflow: 'hidden',
+                border: `1px solid ${isToday ? COLORS.accent + '40' : COLORS.border}`,
+                backgroundColor: COLORS.card,
+                minHeight: hasRides ? 'auto' : '48px',
               }}
             >
-              {/* Day header */}
-              <div style={{ textAlign: 'center', marginBottom: '8px' }}>
+              {/* Day label column */}
+              <div
+                style={{
+                  width: '80px',
+                  flexShrink: 0,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '12px 0',
+                  borderRight: `1px solid ${isToday ? COLORS.accent + '25' : COLORS.border}`,
+                  backgroundColor: isToday ? COLORS.accent + '08' : 'transparent',
+                }}
+              >
                 <div
                   style={{
                     fontSize: '11px',
@@ -181,14 +188,15 @@ export const WeekCalendar = ({ rides, participantCounts, weekOffset, onWeekChang
                     letterSpacing: '0.5px',
                   }}
                 >
-                  {DAY_NAMES_SHORT[date.getDay()]}
+                  {DAY_NAMES[date.getDay()].slice(0, 3)}
                 </div>
                 <div
                   style={{
-                    fontSize: '18px',
+                    fontSize: '22px',
                     fontWeight: 800,
                     fontFamily: 'JetBrains Mono, monospace',
-                    color: isToday ? COLORS.accent : COLORS.textPrimary,
+                    color: isToday ? COLORS.accent : hasRides ? COLORS.textPrimary : COLORS.textMuted,
+                    lineHeight: 1.1,
                     marginTop: '2px',
                   }}
                 >
@@ -196,128 +204,112 @@ export const WeekCalendar = ({ rides, participantCounts, weekOffset, onWeekChang
                 </div>
               </div>
 
-              {/* Rides for this day */}
-              {dayRides.map((ride) => (
-                <Link
-                  key={ride.id}
-                  to={`/ride/${ride.id}`}
-                  style={{
-                    display: 'block',
-                    backgroundColor: COLORS.dark,
-                    border: `1px solid ${COLORS.border}`,
-                    borderRadius: '8px',
-                    padding: '8px',
-                    marginBottom: '4px',
-                    textDecoration: 'none',
-                    transition: 'border-color 0.15s ease',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = COLORS.borderLight;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = COLORS.border;
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: '12px',
-                      fontWeight: 700,
-                      fontFamily: 'DM Sans, sans-serif',
-                      color: COLORS.textPrimary,
-                      marginBottom: '4px',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {ride.title}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: '11px',
-                      fontFamily: 'JetBrains Mono, monospace',
-                      color: COLORS.accent,
-                      fontWeight: 600,
-                      marginBottom: '4px',
-                    }}
-                  >
-                    {formatTime12h(ride.start_datetime)}
-                  </div>
-                  <div
+              {/* Rides area */}
+              <div style={{ flex: 1, padding: hasRides ? '8px 12px' : '0 12px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '6px' }}>
+                {dayRides.map((ride) => (
+                  <Link
+                    key={ride.id}
+                    to={`/ride/${ride.id}`}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '6px',
-                      fontSize: '11px',
-                      color: COLORS.textMuted,
-                      fontFamily: 'DM Sans, sans-serif',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
+                      gap: '16px',
+                      padding: dayRides.length > 1 ? '8px 12px' : '6px 0',
+                      borderRadius: dayRides.length > 1 ? '8px' : '0',
+                      backgroundColor: dayRides.length > 1 ? COLORS.dark : 'transparent',
+                      textDecoration: 'none',
+                      transition: 'background-color 0.15s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = COLORS.dark;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = dayRides.length > 1 ? COLORS.dark : 'transparent';
                     }}
                   >
-                    <MapPin size={10} style={{ flexShrink: 0 }} />
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {ride.start_location}
-                    </span>
-                  </div>
-                  {(participantCounts[ride.id] || 0) > 0 && (
+                    {/* Time */}
                     <div
                       style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        fontSize: '11px',
-                        color: COLORS.textMuted,
-                        fontFamily: 'DM Sans, sans-serif',
-                        marginTop: '3px',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        fontFamily: 'JetBrains Mono, monospace',
+                        color: COLORS.accent,
+                        whiteSpace: 'nowrap',
+                        width: '90px',
+                        flexShrink: 0,
                       }}
                     >
-                      <Users size={10} />
-                      {participantCounts[ride.id]}
+                      {formatTime12h(ride.start_datetime)}
                     </div>
-                  )}
-                  {ride.coffee_shop_name && (
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        fontSize: '11px',
-                        color: '#ffb800',
-                        fontFamily: 'DM Sans, sans-serif',
-                        marginTop: '3px',
-                      }}
-                    >
-                      <Coffee size={10} />
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {ride.coffee_shop_name}
-                      </span>
-                    </div>
-                  )}
-                  {ride.tags && ride.tags.length > 0 && (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3px', marginTop: '4px' }}>
-                      {ride.tags.slice(0, 2).map((tag) => (
-                        <TagBadge key={tag} tagId={tag} size="sm" />
-                      ))}
-                    </div>
-                  )}
-                </Link>
-              ))}
 
-              {dayRides.length === 0 && (
-                <div
-                  style={{
-                    textAlign: 'center',
-                    padding: '8px 0',
-                    fontSize: '11px',
-                    color: COLORS.textMuted,
-                    fontFamily: 'DM Sans, sans-serif',
-                  }}
-                >
-                  —
-                </div>
-              )}
+                    {/* Ride info */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div
+                        style={{
+                          fontSize: '15px',
+                          fontWeight: 700,
+                          fontFamily: 'DM Sans, sans-serif',
+                          color: COLORS.textPrimary,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {ride.title}
+                      </div>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '12px',
+                          marginTop: '3px',
+                          fontSize: '13px',
+                          fontFamily: 'DM Sans, sans-serif',
+                          color: COLORS.textSecondary,
+                        }}
+                      >
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <MapPin size={12} style={{ flexShrink: 0 }} />
+                          {ride.start_location}
+                        </span>
+                        {(participantCounts[ride.id] || 0) > 0 && (
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                            <Users size={12} />
+                            {participantCounts[ride.id]} going
+                          </span>
+                        )}
+                        {ride.coffee_shop_name && (
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#ffb800', flexShrink: 0 }}>
+                            <Coffee size={12} />
+                            {ride.coffee_shop_name}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Tags */}
+                    {ride.tags && ride.tags.length > 0 && (
+                      <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
+                        {ride.tags.slice(0, 2).map((tag) => (
+                          <TagBadge key={tag} tagId={tag} size="sm" />
+                        ))}
+                      </div>
+                    )}
+                  </Link>
+                ))}
+                {!hasRides && (
+                  <span
+                    style={{
+                      fontSize: '13px',
+                      fontFamily: 'DM Sans, sans-serif',
+                      color: COLORS.textMuted,
+                      fontStyle: 'italic',
+                    }}
+                  >
+                    No rides
+                  </span>
+                )}
+              </div>
             </div>
           );
         })}
